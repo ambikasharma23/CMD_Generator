@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 10px;
+            background-color: #f5f5f5;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 700px;
+            margin: auto;
+            background-color: white;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            padding: 12px;
+            background-color: #e9f7fe;
+            border-radius: 4px;
+            border-left: 3px solid #31708f;
+        }
+        .form-group h3 {
+            margin-top: 0;
+            color: #31708f;
+            font-size: 15px;
+        }
+        label {
+            display: block;
+            margin: 8px 0 4px;
+            font-weight: bold;
+            color: #31708f;
+            font-size: 13px;
+        }
+        select, input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            box-sizing: border-box;
+            font-size: 13px;
+        }
+        .output {
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #f4f4f4;
+            border: 1px solid #ddd;
+            white-space: pre-wrap;
+            font-family: monospace;
+            border-radius: 4px;
+            min-height: 60px;
+            max-height: 200px;
+            overflow: auto;
+            font-size: 13px;
+        }
+        .command-output {
+            font-weight: bold;
+            color: #d9534f;
+        }
+        .hidden {
+            display: none;
+        }
+        .config-section {
+            margin-top: 10px;
+            padding-left: 12px;
+            border-left: 2px solid #eee;
+        }
+        .device-selector {
+            margin-bottom: 15px;
+            padding: 12px;
+            background-color: #e9f7fe;
+            border-radius: 4px;
+            border-left: 3px solid #31708f;
+        }
+        .config-selector {
+            margin-bottom: 15px;
+            padding: 12px;
+            background-color: #e9f7fe;
+            border-radius: 4px;
+            border-left: 3px solid #31708f;
+        }
+        .device-selector label, .config-selector label {
+            color: #31708f;
+            font-size: 14px;
+        }
+        .device-selector select, .config-selector select {
+            font-size: 13px;
+            padding: 9px;
+        }
+        .checkbox-group {
+            margin: 8px 0;
+        }
+        .checkbox-group label {
+            display: inline-block;
+            margin-right: 12px;
+            font-weight: normal;
+            color: #444;
+        }
+        .warning {
+            color: #d9534f;
+            font-size: 11px;
+            margin-top: 4px;
+            font-style: italic;
+        }
+        .info {
+            color: #31708f;
+            font-size: 11px;
+            margin-top: 4px;
+            font-style: italic;
+        }
+        .checkbox-item {
+            display: block;
+            margin-bottom: 8px;
+        }
+    
+        .checkbox-item input[type="checkbox"] {
+            margin-right: 8px;
+        }
+    
+        .checkbox-item label {
+            display: inline;
+            font-weight: normal;
+            color: #444;
+        }
+        .command-window {
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+        .command-window h2 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        .definition {
+            color: #31708f;
+            font-size: 11px;
+            margin-top: 4px;
+            font-style: italic;
+            background-color: #f8f9fa;
+            padding: 6px;
+            border-radius: 3px;
+            border-left: 2px solid #31708f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Command Generator</h1>
+
+        <!-- Device Selection -->
+        <div class="device-selector">
+            <label for="deviceType">Select Device Type:</label>
+            <select id="deviceType" onchange="handleDeviceTypeChange()">
+                <option value="None">-- Select Device Type --</option>
+                <option value="BSF/BSM">BSF/BSM</option>
+                <option value="BeeLabel">BeeLabel</option>
+                <option value="BAG 5G">BAG 5G</option>
+                <option value="Solar">Solar</option>
+                <option value="Router">Router</option>
+            </select>
+        </div>
+
+        <!-- Configuration Selection -->
+        <div id="configSelector" class="config-selector hidden">
+            <label for="configType">Select Configuration:</label>
+            <select id="configType" onchange="handleConfigChange()">
+                <option value="None">-- Select Configuration --</option>
+                <!-- Options will be populated dynamically -->
+            </select>
+        </div>
+
+        <!-- Configuration Sections (initially hidden) -->
+        
+        <!-- IP Configuration -->
+        <div id="ipConfigSection" class="form-group hidden">
+            <h3>IP Configuration</h3>
+            <label for="ipConfig">IP Configuration:</label>
+            <select id="ipConfig" onchange="updateCommand()">
+                <option value="none">-- Select Option --</option>
+                <option value="US">US</option>
+                <option value="DE">DE</option>
+                <option value="Staging">Staging</option>
+            </select>
+        </div>
+
+        <!-- GPS Configuration -->
+        <div id="gpsConfigSection" class="form-group hidden">
+            <h3>GPS Configuration</h3>
+            <label for="gpsConfig">GPS Configuration:</label>
+            <select id="gpsConfig" onchange="updateCommand()">
+                <option value="none">-- Select Option --</option>
+                <option value="on">On</option>
+                <option value="off">Off</option>
+            </select>
+        </div>
+
+        <!-- WiFi Configuration -->
+        <div id="wifiConfigSection" class="form-group hidden">
+            <h3>WiFi Configuration</h3>
+            <label for="wifiConfig">WiFi Configuration:</label>
+            <select id="wifiConfig" onchange="updateCommand()">
+                <option value="none">-- Select Option --</option>
+                <option value="on">On</option>
+                <option value="off">Off</option>
+            </select>
+        </div>
+
+        <!-- BLE Configuration -->
+        <div id="bleConfigSection" class="form-group hidden">
+            <h3>BLE Configuration</h3>
+            <label for="bleConfig">BLE Configuration:</label>
+            <select id="bleConfig" onchange="toggleBLEInputs(); updateCommand()">
+                <option value="none">-- Select Option --</option>
+                <option value="on">On</option>
+                <option value="off">Off</option>
+            </select>
+            <div id="bleScanTimeInput" class="hidden config-section">
+                <label for="bleScanTime">BLE Scan Time (seconds, min 10, max 100):</label>
+                <input type="number" id="bleScanTime" min="10" max="100" step="10" value="10" onchange="validateBLEScanTime(); updateCommand()">
+                <div id="bleScanTimeWarning" class="warning hidden">Note: Higher BLE scan time will affect battery life</div>
+            </div>
+        </div>
+
+        <!-- Shock Interrupt Configuration -->
+        <div id="shockConfigSection" class="form-group hidden">
+            <h3>Shock Interrupt Configuration</h3>
+            <label for="shockConfig">Shock Configuration:</label>
+            <select id="shockConfig" onchange="toggleShockInputs(); updateCommand()">
+                <option value="none">-- Select Option --</option>
+                <option value="on">On</option>
+                <option value="off">Off</option>
+            </select>
+            <div id="shockInputs" class="hidden config-section">
+                <label for="shockTimeGap">Shock Time Gap (seconds, min 360):</label>
+                <input type="number" id="shockTimeGap" min="360" value="360" onchange="validateShockTimeGap(); updateCommand()">
+                <div id="shockTimeGapWarning" class="warning hidden">Note: Lower time gap will affect battery life</div>
+                <div class="info">Time Gap Definition: It is the interval between two events/triggers to avoid multiple events</div>
+                <label for="shockForce">Shock Force:</label>
+                <select id="shockForce" onchange="updateCommand()">
+                    <option value="0">2g</option>
+                    <option value="1">4g</option>
+                    <option value="2">8g</option>
+                    <option value="3">16g</option>
+                </select>
+                <label for="shockThreshold">Shock Threshold (1-255):</label>
+                <input type="number" id="shockThreshold" min="1" max="255" value="100" onchange="updateCommand()">
+            </div>
+        </div>
+
+        <!-- Light Interrupt Configuration -->
+        <div id="lightConfigSection" class="form-group hidden">
+            <h3>Light Interrupt Configuration</h3>
+            <label for="lightConfig">Light Configuration:</label>
+            <select id="lightConfig" onchange="toggleLightInputs(); updateCommand()">
+                <option value="none">-- Select --</option>
+                <option value="on">On</option>
+                <option value="off">Off</option>
+            </select>
+            <div id="lightInputs" class="hidden config-section">
+                <label for="lightTimeGap">Light Time Gap (seconds, min 360):</label>
+                <input type="number" id="lightTimeGap" min="360" value="360" onchange="validateLightTimeGap(); updateCommand()">
+                <div id="lightTimeGapWarning" class="warning hidden">Note: Lower time gap will affect battery life</div>
+                <div class="info">Time Gap Definition: It is the interval between two events/triggers to avoid multiple events</div>
+            </div>
+        </div>
+
+        <!-- Sensor Configuration -->
+        <div id="sensorConfigSection" class="form-group hidden">
+            <h3>Sensor Configuration</h3>
+            <div class="checkbox-group">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="tempSensor" onchange="updateCommand()">
+                    <label for="tempSensor">Temperature Sensor</label>
+                </div>
+                <div class="checkbox-item" id="humiditySensorItem">
+                    <input type="checkbox" id="humiditySensor" onchange="updateCommand()">
+                    <label for="humiditySensor">Humidity Sensor</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="lightSensor" onchange="updateCommand()">
+                    <label for="lightSensor">Ambient Sensor</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="noneSensor" onchange="handleNoneSensor()">
+                    <label for="noneSensor">None</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Regular PRF Configuration (for non-Solar devices) -->
+        <div id="prfConfigSection" class="form-group hidden">
+            <h3>PRF Configuration</h3>
+            <label for="prfInterval">PRF/Reporting Interval (In seconds):</label>
+            <input type="number" id="prfInterval" min="300" value="300" onchange="updateCommand()">
+            <label for="sampleFrequency">Sensor/Sample Frequency (In seconds):</label>
+            <input type="number" id="sampleFrequency" min="300" value="300" onchange="updateCommand()">
+        </div>
+
+        <!-- Solar Configurations -->
+        <div id="solarConfig" class="hidden">
+            <!-- Solar-specific PRF Configuration -->
+            <div id="solarPRFSection" class="form-group hidden">
+                <h3>PRF Configuration</h3>
+                <label for="solarPRFConfig">PRF Mode:</label>
+                <select id="solarPRFConfig" onchange="toggleSolarPRFInputs(); updateCommand()">
+                    <option value="none">-- Select Option --</option>
+                    <option value="config">Configure PRF</option>
+                    <option value="default">Default</option>
+                </select>
+                <div id="solarPRFInputs" class="hidden config-section">
+                    <label for="motionTimer">Motion Timer (min 600 seconds):</label>
+                    <input type="number" id="motionTimer" min="600" value="600" onchange="updateCommand()">
+                    <div class="definition">When device moves then PRF changes according to set motion timer</div>
+                    
+                    <label for="standstillTimer">Standstill Timer (min 1200 seconds):</label>
+                    <input type="number" id="standstillTimer" min="1200" value="1200" onchange="updateCommand()">
+                    <div class="definition">When device is stationary, PRF changes according to set standstill timer</div>
+                </div>
+            </div>
+
+            <!-- BLE ON/OFF Configuration -->
+            <div id="solarBLESection" class="form-group hidden">
+                <h3>BLE ON/OFF Configuration</h3>
+                <label for="solarBLEConfig">BLE Configuration:</label>
+                <select id="solarBLEConfig" onchange="updateCommand()">
+                    <option value="none">-- Select Option --</option>
+                    <option value="on">On</option>
+                    <option value="off">Off</option>
+                </select>
+            </div>
+
+            <!-- BLE Scan Mode Configuration -->
+            <div id="solarBLEScanModeSection" class="form-group hidden">
+                <h3>BLE Scan Mode Configuration</h3>
+                <label for="solarBLEScanModeConfig">BLE Scan Mode:</label>
+                <select id="solarBLEScanModeConfig" onchange="toggleSolarBLEScanModeInputs(); updateCommand()">
+                    <option value="none">-- Select Option --</option>
+                    <option value="on">On</option>
+                </select>
+                <div id="solarBLEScanModeInputs" class="hidden config-section">
+                    <label for="scanTriggerTime">Scan Trigger Time (minutes, min 20):</label>
+                    <input type="number" id="scanTriggerTime" min="20" value="20" onchange="updateCommand()">
+                    <label for="scanDuration">Scan Duration (seconds, min 30):</label>
+                    <input type="number" id="scanDuration" min="30" value="30" onchange="updateCommand()">
+                </div>
+            </div>
+
+            <!-- BLE to Scan Roambee Beacon Configuration -->
+            <div id="solarBLEWildcardSection" class="form-group hidden">
+                <h3>BLE Wildcard Configuration</h3>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="solarBLEWildcard" onchange="updateCommand()"> Enable BLE Wildcard</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Router Configurations -->
+        <div id="routerConfig" class="hidden">
+            <!-- PRF Configuration -->
+            <div id="routerPRFSection" class="form-group hidden">
+                <h3>PRF Configuration</h3>
+                <label for="routerPRF">PRF (seconds, min 300):</label>
+                <input type="number" id="routerPRF" min="300" value="300" onchange="updateCommand()">
+            </div>
+
+            <!-- GPS Configuration -->
+            <div id="routerGPSSection" class="form-group hidden">
+                <h3>GPS Configuration</h3>
+                <label for="routerGPSConfig">GPS Configuration:</label>
+                <select id="routerGPSConfig" onchange="toggleRouterGPSInputs(); updateCommand()">
+                    <option value="none">-- Select Option --</option>
+                    <option value="config">Config</option>
+                </select>
+                <div id="routerGPSInputs" class="hidden config-section">
+                   极
+                    <label for="routerLat">Latitude:</label>
+                    <input type="number" id="routerLat" step="0.000001" onchange="updateCommand()">
+                    <label for="routerLng">Longitude:</label>
+                    <input type="number" id="routerLng" step="0.000001" onchange="updateCommand()">
+                </div>
+            </div>
+        </div>
+
+        <!-- Command Output Window -->
+        <div class="command-window">
+            <h2>Generated Command</h2>
+            <div class="output" id="output"><em>No command generated. Please select configuration options.</em></div>
+        </div>
+    </div>
+
+    <script>
+        // Track which configurations have been selected
+        const selectedConfigs = new Set();
+        
+        // Configuration options for each device type
+        const deviceConfigs = {
+            "BSF/BSM": [
+                "IP Configuration",
+                "GPS Configuration",
+                "WiFi Configuration",
+                "BLE Configuration",
+                "Shock Configuration",
+                "Light Interrupt Configuration",
+                "Sensor Configuration",
+                "PRF Configuration"
+            ],
+            "BeeLabel": [
+                "IP Configuration",
+                "GPS Configuration",
+                "WiFi Configuration",
+                "BLE Configuration",
+                "Shock Configuration",
+                "Light Interrupt Configuration",
+                "Sensor Configuration",
+                "PRF Configuration"
+            ],
+            "BAG 5G": [
+                "IP Configuration",
+                "GPS Configuration",
+                "WiFi Configuration",
+                "BLE Configuration",
+                "Shock Configuration",
+                "Light Interrupt Configuration",
+                "Sensor Configuration",
+                "PRF Configuration"
+            ],
+            "Solar": [
+                "PRF Configuration",
+                "BLE ON/OFF Configuration",
+                "BLE Scan Mode Configuration",
+                "BLE Wildcard Configuration"
+            ],
+            "Router": [
+                "PRF Configuration",
+                "GPS Configuration"
+            ]
+        };
+
+        // Map configuration names to their section IDs
+        const configSectionMap = {
+            "IP Configuration": "ipConfigSection",
+            "GPS Configuration": "gpsConfigSection",
+            "WiFi Configuration": "wifiConfigSection",
+            "BLE Configuration": "bleConfigSection",
+            "Shock Configuration": "shockConfigSection",
+            "Light Interrupt Configuration": "lightConfigSection",
+            "Sensor Configuration": "sensorConfigSection",
+            "PRF Configuration": "prfConfigSection",
+            "BLE ON/OFF Configuration": "solarBLESection",
+            "BLE Scan Mode Configuration": "solarBLEScanModeSection",
+            "BLE Wildcard Configuration": "solarBLEWildcardSection"
+        };
+
+        // Track the currently displayed command
+        let currentCommand = "";
+
+        function handleNoneSensor() {
+            const noneSensor = document.getElementById('noneSensor');
+            if (noneSensor.checked) {
+                document.getElementById('tempSensor').checked = false;
+                document.getElementById('humiditySensor').checked = false;
+                document.getElementById('lightSensor').checked = false;
+            }
+            updateCommand();
+        }
+
+        function validateBLEScanTime() {
+            const bleScanTime = document.getElementById('bleScanTime');
+            const warning = document.getElementById('bleScanTimeWarning');
+            
+            // Validate min and max values
+            if (bleScanTime.value < 10) {
+                bleScanTime.value = 10;
+            } else if (bleScanTime.value > 100) {
+                bleScanTime.value = 100;
+            }
+            
+            // Round to nearest multiple of 10
+            bleScanTime.value = Math.round(bleScanTime.value / 10) * 10;
+            
+            // Show warning if scan time is more than 30 seconds
+            if (bleScanTime.value > 30) {
+                warning.classList.remove('hidden');
+            } else {
+                warning.classList.add('hidden');
+            }
+        }
+
+        function validateShockTimeGap() {
+            const shockTimeGap = document.getElementById('shockTimeGap');
+            const warning = document.getElementById('shockTimeGapWarning');
+            
+            // Validate min value
+            if (shockTimeGap.value < 360) {
+                shockTimeGap.value = 360;
+            }
+            
+            // Show warning if time gap is less than 900 seconds
+            if (shockTimeGap.value < 900) {
+                warning.classList.remove('hidden');
+            } else {
+                warning.classList.add('hidden');
+            }
+        }
+
+        function validateLightTimeGap() {
+            const lightTimeGap = document.getElementById('lightTimeGap');
+            const warning = document.getElementById('lightTimeGapWarning');
+            
+            // Validate min value
+            if (lightTimeGap.value < 360) {
+                lightTimeGap.value = 360;
+            }
+            
+            // Show warning if time gap is less than 900 seconds
+            if (lightTimeGap.value < 900) {
+                warning.classList.remove('hidden');
+            } else {
+                warning.classList.add('hidden');
+            }
+        }
+
+        function toggleBLEInputs() {
+            const bleConfig = document.getElementById('bleConfig').value;
+            const bleScanTimeInput = document.getElementById('bleScanTimeInput');
+            bleScanTimeInput.style.display = bleConfig === 'on' ? 'block' : 'none';
+            
+            // Validate BLE scan time when showing the input
+            if (bleConfig === 'on') {
+                validateBLEScanTime();
+            }
+        }
+
+        function toggleShockInputs() {
+            const shockConfig = document.getElementById('shockConfig').value;
+            const shockInputs = document.getElementById('shockInputs');
+            shockInputs.style.display = shockConfig === 'on' ? 'block' : 'none';
+            
+            // Validate shock time gap when showing the input
+            if (shockConfig === 'on') {
+                validateShockTimeGap();
+            }
+        }
+
+        function toggleLightInputs() {
+            const lightConfig = document.getElementById('lightConfig').value;
+            const lightInputs = document.getElementById('lightInputs');
+            lightInputs.style.display = lightConfig === 'on' ? 'block' : 'none';
+            
+            // Validate light time gap when showing the input
+            if (lightConfig === 'on') {
+                validateLightTimeGap();
+            }
+        }
+
+        function toggleSolarPRFInputs() {
+            const solarPRFConfig = document.getElementById('solarPRFConfig').value;
+            document.getElementById('solarPRFInputs').style.display = solarPRFConfig === 'config' ? 'block' : 'none';
+        }
+
+        function toggleSolarBLEScanModeInputs() {
+            const solarBLEScanModeConfig = document.getElementById('solarBLEScanModeConfig').value;
+            document.getElementById('solarBLEScanModeInputs').style.display = solarBLEScanModeConfig === 'on' ? 'block' : 'none';
+        }
+
+        function toggleRouterGPSInputs() {
+            const routerGPSConfig = document.getElementById('routerGPSConfig').value;
+            document.getElementById('routerGPSInputs').style.display = routerGPSConfig === 'config' ? 'block' : 'none';
+        }
+
+        function handleDeviceTypeChange() {
+            const deviceType = document.getElementById('deviceType').value;
+            const configSelector = document.getElementById('configSelector');
+            const configTypeSelect = document.getElementById('configType');
+
+            // Clear previous options and selections
+            configTypeSelect.innerHTML = '<option value="None">-- Select Configuration --</option>';
+            selectedConfigs.clear();
+
+            if (deviceType !== 'None') {
+                // Show configuration selector
+                configSelector.style.display = 'block';
+                
+                // Populate configuration options based on device type
+                const configs = deviceConfigs[deviceType];
+                configs.forEach(config => {
+                    const option = document.createElement('option');
+                    option.value = config;
+                    option.textContent = config;
+                    configTypeSelect.appendChild(option);
+                });
+
+                // Set default values based on device type
+                if (deviceType === 'BeeLabel') {
+                    document.getElementById('prfInterval').min = 600;
+                    document.getElementById('sampleFrequency').min = 600;
+                    document.getElementById('prfInterval').value = 600;
+                    document.getElementById('sampleFrequency').value = 600;
+                    document.getElementById('humiditySensorItem').style.display = 'none';
+                } else if (deviceType === 'BAG 5G') {
+                    document.getElementById('prfInterval').min = 900;
+                    document.getElementById('sampleFrequency').min = 900;
+                    document.getElementById('prfInterval').value = 900;
+                    document.getElementById('sampleFrequency').value = 900;
+                    document.getElementById('humiditySensorItem').style.display = 'block';
+                } else if (deviceType === 'BSF/BSM') {
+                    document.getElementById('prfInterval').min = 300;
+                    document.getElementById('sampleFrequency').min = 300;
+                    document.getElementById('prfInterval').value = 300;
+                    document.getElementById('sampleFrequency').value = 300;
+                    document.getElementById('humiditySensorItem').style.display = 'block';
+                }
+
+                if (deviceType === 'Solar') {
+                    document.getElementById('motionTimer').min = 600;
+                    document.getElementById('standstillTimer').min = 1200;
+                    document.getElementById('motionTimer').value = 600;
+                    document.getElementById('standstillTimer').value = 1200;
+                }
+            } else {
+                // Hide configuration selector if no device is selected
+                configSelector.style.display = 'none';
+            }
+
+            // Hide all configuration sections
+            document.querySelectorAll('.form-group').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // Show device-specific sections
+            if (deviceType === 'Solar') {
+                document.getElementById('solarConfig').style.display = 'block';
+                document.getElementById('routerConfig').style.display = 'none';
+            } else if (deviceType === 'Router') {
+                document.getElementById('routerConfig').style.display = 'block';
+                document.getElementById('solarConfig').style.display = 'none';
+            } else {
+                document.getElementById('solarConfig').style.display = 'none';
+                document.getElementById('routerConfig').style.display = 'none';
+            }
+
+            // Refresh the command page
+            refreshCommandPage();
+            updateCommand();
+        }
+
+        function handleConfigChange() {
+            const configType = document.getElementById('configType').value;
+            const deviceType = document.getElementById('deviceType').value;
+            
+            // Hide all configuration sections first
+            document.querySelectorAll('.form-group').forEach(section => {
+                section.style.display = 'none';
+            });
+
+            // Show the selected configuration section
+            if (configType !== 'None') {
+                // Special handling for PRF Configuration based on device type
+                if (configType === "PRF Configuration") {
+                    if (deviceType === 'Solar') {
+                        document.getElementById('solarPRFSection').style.display = 'block';
+                    } else if (deviceType === 'Router') {
+                        document.getElementById('routerPRFSection').style.display = 'block';
+                    } else {
+                        document.getElementById('prfConfigSection').style.display = 'block';
+                        // Update min values when showing PRF config
+                        if (deviceType === 'BeeLabel') {
+                            document.getElementById('prfInterval').min = 600;
+                            document.getElementById('sampleFrequency').min = 600;
+                        } else if (deviceType === 'BAG 5G') {
+                            document.getElementById('prfInterval').min = 900;
+                            document.getElementById('sampleFrequency').min = 900;
+                        } else if (deviceType === 'BSF/BSM') {
+                            document.getElementById('prfInterval').min = 300;
+                            document.getElementById('sampleFrequency').min = 300;
+                        }
+                    }
+                } 
+                // Special handling for GPS Configuration for Router
+                else if (configType === "GPS Configuration" && deviceType === 'Router') {
+                    document.getElementById('routerGPSSection').style.display = 'block';
+                    toggleRouterGPSInputs(); // Show/hide inputs based on selection
+                }
+                else if (configSectionMap[configType]) {
+                    document.getElementById(configSectionMap[configType]).style.display = 'block';
+                }
+                selectedConfigs.add(configType);
+            }
+            
+            updateCommand();
+        }
+
+        function refreshCommandPage() {
+            // Reset all inputs to default values
+            document.getElementById('ipConfig').value = 'none';
+            document.getElementById('gpsConfig').value = 'none';
+            document.getElementById('wifiConfig').value = 'none';
+            document.getElementById('bleConfig').value = 'none';
+            document.getElementById('shockConfig').value = 'none';
+            document.getElementById('lightConfig').value = 'none';
+            document.getElementById('lightSensor').checked = false;
+            document.getElementById('tempSensor').checked = false;
+            document.getElementById('humiditySensor').checked = false;
+            document.getElementById('noneSensor').checked = false;
+            document.getElementById('solarBLEConfig').value = 'none';
+            document.getElementById('solarBLEScanModeConfig').value = 'none';
+            document.getElementById('solarPRFConfig').value = 'none';
+            document.getElementById('routerGPSConfig').value = 'none';
+            
+            // Reset PRF values based on device type
+            const deviceType = document.getElementById('deviceType').value;
+            if (deviceType === 'BeeLabel') {
+                document.getElementById('prfInterval').value = 600;
+                document.getElementById('sampleFrequency').value = 600;
+            } else if (deviceType === 'BAG 5G') {
+                document.getElementById('prfInterval').value = 900;
+                document.getElementById('sampleFrequency').value = 900;
+            } else if (deviceType === 'BSF/BSM') {
+                document.getElementById('prfInterval').value = 300;
+                document.getElementById('sampleFrequency').value = 300;
+            } else if (deviceType === 'Router') {
+                document.getElementById('routerPRF').value = 300;
+            }
+            
+            document.getElementById('motionTimer').value = 600;
+            document.getElementById('standstillTimer').value = 1200;
+            document.getElementById('solarPRFInputs').style.display = 'none';
+            document.getElementById('deactivationConfig').checked = false;
+
+            // Hide all dynamic inputs
+            document.getElementById('bleScanTimeInput').style.display = 'none';
+            document.getElementById('shockInputs').style.display = 'none';
+            document.getElementById('lightInputs').style.display = 'none';
+            document.getElementById('routerGPSInputs').style.display = 'none';
+            document.getElementById('solarBLEScanModeInputs').style.display = 'none';
+            document.getElementById('bleScanTimeWarning').classList.add('hidden');
+            document.getElementById('shockTimeGapWarning').classList.add('hidden');
+            document.getElementById('lightTimeGapWarning').classList.add('hidden');
+
+            // Clear the output
+            document.getElementById('output').innerHTML = '<em>No command generated. Please select configuration options.</em>';
+            currentCommand = "";
+        }
+
+        function validateIntervals() {
+            const deviceType = document.getElementById('deviceType').value;
+            if (deviceType === 'None') {
+                return false;
+            }
+
+            if (deviceType !== 'Solar' && deviceType !== 'Router' && selectedConfigs.has("PRF Configuration")) {
+                const prfInterval = parseInt(document.getElementById('prfInterval').value);
+                const sampleFrequency = parseInt(document.getElementById('sampleFrequency').value);
+
+                // Check if Sample Frequency is greater than PRF Interval
+                if (sampleFrequency > prfInterval) {
+                    return false;
+                }
+
+                // Check if PRF Interval is a multiple of Sample Frequency
+                if (prfInterval % sampleFrequency !== 0) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        function updateCommand() {
+            // Validate intervals before generating the command
+            if (!validateIntervals()) {
+                document.getElementById('output').innerHTML = '<em>Configuration error: Please check your interval settings.</em>';
+                currentCommand = "";
+                return; // Stop command generation if validation fails
+            }
+
+            const configType = document.getElementById('configType').value;
+            const deviceType = document.getElementById('deviceType').value;
+
+            // If no configuration is selected, clear the command
+            if (configType === 'None' || deviceType === 'None') {
+                document.getElementById('output').innerHTML = '<em>No command generated. Please select configuration options.</em>';
+                currentCommand = "";
+                return;
+            }
+
+            // Generate command based on the selected configuration
+            if (deviceType === 'Solar') {
+                // PRF Configuration
+                if (configType === "PRF Configuration") {
+                    const solarPRFConfig = document.getElementById('solarPRFConfig').value;
+                    if (solarPRFConfig === 'config') {
+                        const motionTimer = document.getElementById('motionTimer').value;
+                        const standstillTimer = document.getElementById('standstillTimer').value;
+                        currentCommand = `TIMER,0000,${motionTimer}:${standstillTimer}:0:0#`;
+                    } else if (solarPRFConfig === 'default') {
+                        currentCommand = `TIMER,0000,600:1200:0:0#`;
+                    } else {
+                        currentCommand = "";
+                    }
+                }
+                // BLE ON/OFF Configuration
+                else if (configType === "BLE ON/OFF Configuration") {
+                    const solarBLEConfig = document.getElementById('solarBLEConfig').value;
+                    if (solarBLEConfig !== 'none') {
+                        currentCommand = `BLESCAN,${solarBLEConfig === 'on' ? 1 : 0}#`;
+                    } else {
+                        currentCommand = "";
+                    }
+                }
+                // BLE Scan Mode Configuration
+                else if (configType === "BLE Scan Mode Configuration") {
+                    const solarBLEScanModeConfig = document.getElementById('solarBLEScanModeConfig').value;
+                    if (solarBLEScanModeConfig === 'on') {
+                        const scanTriggerTime = document.getElementById('scanTriggerTime').value;
+                        const scanDuration = document.getElementById('scanDuration').value;
+                        currentCommand = `BLESCAN,12,${scanTriggerTime},${scanDuration}#`;
+                    } else {
+                        currentCommand = "";
+                    }
+                }
+                // BLE to Scan Roambee Beacon Configuration
+                else if (configType === "BLE Wildcard Configuration") {
+                    const solarBLEWildcard = document.getElementById('solarBLEWildcard').checked;
+                    if (solarBLEWildcard) {
+                        currentCommand = `BLEWILDCARD,0:52420400,40,0000#`;
+                    } else {
+                        currentCommand = "";
+                    }
+                }
+            } else if (deviceType === 'Router') {
+                // PRF Configuration
+                if (configType === "PRF Configuration") {
+                    const routerPRF = document.getElementById('routerPRF').value;
+                    currentCommand = `RBCFG:VVRMT;BSC,1,G2,9999,${routerPRF},5242,-99;__SEQNUM__$`;
+                }
+                // GPS Configuration
+                else if (configType === "GPS Configuration") {
+                    const routerGPSConfig = document.getElementById('routerGPSConfig').value;
+                    if (routerGPSConfig === 'config') {
+                        const routerLat = document.getElementById('routerLat').value;
+                        const routerLng = document.getElementById('routerLng').value;
+                        if (routerLat && routerLng) {
+                            currentCommand = `RBCFG:VVRMT;GPS,1,${routerLat},${routerLng},101;__SEQNUM__$`;
+                        } else {
+                            document.getElementById('output').innerHTML = '<em>Please enter both latitude and longitude values for GPS configuration.</em>';
+                            currentCommand = "";
+                            return;
+                        }
+                    } else {
+                        currentCommand = "";
+                    }
+                }
+            } else if (deviceType !== 'None') {
+                // Common configurations
+                if (configType === "IP Configuration") {
+                    const ipConfig = document.getElementById('ipConfig').value;
+                    if (ipConfig === "US") {
+                        currentCommand = `AT+IP=0,aovx-listener.roambee.com,30009`;
+                    } else if (ipConfig === "DE") {
+                        currentCommand = `AT+IP=0,aovx-listener.roambee.de,30009`;
+                    } else if (ipConfig === "Staging") {
+                        currentCommand = `AT+IP=0,listener-staging.roambee.net,30009`;
+                    } else {
+                        currentCommand = "";
+                    }
+                }
+                else if (configType === "GPS Configuration") {
+                    const gpsConfig = document.getElementById('gpsConfig').value;
+                    if (gpsConfig === "on") {
+                        currentCommand = `AT+GNSSENABLE=1`;
+                    } else if (gpsConfig === "off") {
+                        currentCommand = `AT+GNSSENABLE=0`;
+                    } else {
+                        currentCommand = "";
+                    }
+                }
+                else if (configType === "WiFi Configuration") {
+                    const wifiConfig = document.getElementById('wifiConfig').value;
+                    if (wifiConfig === "on") {
+                        currentCommand = `AT+WIFIENABLE=1,10`;
+                    } else if (wifiConfig === "off") {
+                        currentCommand = `AT+WIFIENABLE=0,10`;
+                    } else {
+                        currentCommand = "";
+                    }
+                }
+                else if (configType === "BLE Configuration" && deviceType !== 'BAG 5G') {
+                    const bleConfig = document.getElementById('bleConfig').value;
+                    if (bleConfig === "on") {
+                        const bleScanTime = document.getElementById('bleScanTime').value;
+                        currentCommand = `AT+BTENABLE=1,${bleScanTime}`;
+                    } else if (bleConfig === "off") {
+                        currentCommand = `AT+BTENABLE=0,10`;
+                    } else {
+                        currentCommand = "";
+                    }
+                }
+                else if (configType === "Shock Configuration") {
+                    const shockConfig = document.getElementById('shockConfig').value;
+                    if (shockConfig === "on") {
+                        const shockTimeGap = document.getElementById('shockTimeGap').value;
+                        const shockForce = document.getElementById('shockForce').value;
+                        const shockThreshold = document.getElementById('shockThreshold').value;
+                        currentCommand = `AT+MOTION=2,10,${shockTimeGap} & AT+VIBPARAM=1,${shockForce},${shockThreshold}`;
+                    } else if (shockConfig === "off") {
+                        currentCommand = `AT+VIBPARAM=0,0,150`;
+                    } else {
+                        currentCommand = "";
+                    }
+                }
+                else if (configType === "Light Interrupt Configuration") {
+                    const lightConfig = document.getElementById('lightConfig').value;
+                    if (lightConfig === "on") {
+                        const lightTimeGap = document.getElementById('lightTimeGap').value;
+                        currentCommand = `AT+LIGHT=1,500,${lightTimeGap}`;
+                    } else if (lightConfig === "off") {
+                        currentCommand = `AT+LIGHT=0,500,360`;
+                    } else {
+                        currentCommand = "";
+                    }
+                }
+                else if (configType === "Sensor Configuration") {
+                    const tempSensor = document.getElementById('tempSensor').checked;
+                    const ambientSensor = document.getElementById('lightSensor').checked;
+                    const humiditySensor = deviceType === 'BeeLabel' ? false : document.getElementById('humiditySensor').checked;
+                    const noneSensor = document.getElementById('noneSensor').checked;
+
+                    // If "None" is selected, set sensor mask to 0
+                    if (noneSensor) {
+                        currentCommand = `AT+SENSORMASK=0`;
+                    } 
+                    // Generate AT+SENSORMASK only if at least one sensor is selected
+                    else if (tempSensor || ambientSensor || humiditySensor) {
+                        const sensorMask = generateSensorMask(tempSensor, humiditySensor, ambientSensor);
+                        currentCommand = `AT+SENSORMASK=${sensorMask}`;
+                    } else {
+                        currentCommand = "";
+                    }
+                }
+                else if (configType === "PRF Configuration") {
+                    const prfInterval = document.getElementById('prfInterval').value;
+                    const sampleFrequency = document.getElementById('sampleFrequency').value;
+                    
+                    if (prfInterval === sampleFrequency) {
+                        currentCommand = `AT+TIMEGAP=0,${prfInterval},1,${prfInterval} & AT+SAMPLEMODE=0,0`;
+                    } else {
+                        currentCommand = `AT+TIMEGAP=0,${prfInterval},1,${sampleFrequency} & AT+SAMPLEMODE=1,1`;
+                    }
+                }
+            }
+
+            // Display the generated command
+            const outputDiv = document.getElementById('output');
+            if (currentCommand === "") {
+                outputDiv.innerHTML = "<em>No command generated. Please select configuration options.</em>";
+            } else {
+                outputDiv.innerHTML = `<pre class="command-output">${currentCommand}</pre>`;
+            }
+        }
+
+        function generateSensorMask(tempSensor, humiditySensor, ambientSensor) {
+            const bit0 = ambientSensor ? 1 : 0;
+            const bit1 = tempSensor ? 1 : 0;
+            const bit2 = humiditySensor ? 1 : 0;
+            const bit3 = 1; // Always 1
+            const bit4 = 1; // Always 1
+
+            const binary = `${bit4}${bit3}${bit2}${bit1}${bit0}`;
+            return parseInt(binary, 2);
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshCommandPage();
+        });
+    </script>
+</body>
+</html>
