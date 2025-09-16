@@ -392,9 +392,9 @@
         <div id="prfConfigSection" class="form-group hidden">
             <h3>PRF Configuration</h3>
             <label for="prfInterval">PRF/Reporting Interval (In seconds):</label>
-            <input type="number" id="prfInterval" min="300" value="300" onchange="updateCommand()">
+            <input type="number" id="prfInterval" min="300" value="300" onchange="updateCommand()" oninput="validateDeviceInput(this, true)">
             <label for="sampleFrequency">Sensor/Sample Frequency (In seconds):</label>
-            <input type="number" id="sampleFrequency" min="300" value="300" onchange="updateCommand()">
+            <input type="number" id="sampleFrequency" min="300" value="300" onchange="updateCommand()" oninput="validateDeviceInput(this, false)">
             <!-- <div class="definition">Note: PRF should be multiple of sample/sensor frequency</div> -->
         </div>
 
@@ -800,6 +800,26 @@
             document.getElementById('routerGPSInputs').style.display = routerGPSConfig === 'config' ? 'block' : 'none';
         }
 
+        function validateDeviceInput(input, isPRF = true) {
+            const deviceType = document.getElementById('deviceType').value;
+            let minValue;
+            
+            if (deviceType === 'BeeLabel') {
+                minValue = 600;
+            } else if (deviceType === 'BAG 5G') {
+                minValue = 900;
+            } else if (deviceType === 'BSF/BSM') {
+                minValue = 300;
+            } else {
+                return; // No validation for other devices
+            }
+            
+            if (parseInt(input.value) < minValue) {
+                input.value = minValue;
+            }
+            updateCommand();
+        }
+
         function handleDeviceTypeChange() {
             const deviceType = document.getElementById('deviceType').value;
             const configSelector = document.getElementById('configSelector');
@@ -990,11 +1010,10 @@
 
         function validateIntervals() {
             const deviceType = document.getElementById('deviceType').value;
-            if (deviceType === 'None') {
-                return false;
-            }
-
-            if (deviceType !== 'Solar' && deviceType !== 'Router' && selectedConfigs.has("PRF Configuration")) {
+            const configType = document.getElementById('configType').value;
+            
+            // Only validate for specific devices and when PRF Configuration is selected
+            if (['BSF/BSM', 'BeeLabel', 'BAG 5G'].includes(deviceType) && configType === "PRF Configuration") {
                 const prfInterval = parseInt(document.getElementById('prfInterval').value);
                 const sampleFrequency = parseInt(document.getElementById('sampleFrequency').value);
 
@@ -1013,19 +1032,50 @@
         }
 
         function updateCommand() {
-            // Validate intervals before generating the command
-            if (!validateIntervals()) {
-                document.getElementById('output').innerHTML = '<em>Configuration error: PRF/Reporting Interval must be a multiple or equal to Sensor/Sample Frequency.</em>';
+            const deviceType = document.getElementById('deviceType').value;
+            const configType = document.getElementById('configType').value;
+
+            // If no device or configuration is selected, show appropriate message
+            if (deviceType === 'None' || configType === 'None') {
+                if (deviceType === 'None') {
+                    document.getElementById('output').innerHTML = '<em>Please select a device type.</em>';
+                } else {
+                    document.getElementById('output').innerHTML = '<em>Please select configuration options.</em>';
+                }
                 currentCommand = "";
-                return; // Stop command generation if validation fails
+                return;
             }
 
-            const configType = document.getElementById('configType').value;
-            const deviceType = document.getElementById('deviceType').value;
+            // Validate PRF and sample frequency values for specific devices
+            if (['BSF/BSM', 'BeeLabel', 'BAG 5G'].includes(deviceType) && configType === "PRF Configuration") {
+                const prfInterval = document.getElementById('prfInterval');
+                const sampleFrequency = document.getElementById('sampleFrequency');
+                
+                // Get minimum values based on device type
+                let minPRF, minSample;
+                if (deviceType === 'BeeLabel') {
+                    minPRF = 600;
+                    minSample = 600;
+                } else if (deviceType === 'BAG 5G') {
+                    minPRF = 900;
+                    minSample = 900;
+                } else if (deviceType === 'BSF/BSM') {
+                    minPRF = 300;
+                    minSample = 300;
+                }
 
-            // If no configuration is selected, clear the command
-            if (configType === 'None' || deviceType === 'None') {
-                document.getElementById('output').innerHTML = '<em>No command generated. Please select configuration options.</em>';
+                // Validate and enforce minimum values
+                if (parseInt(prfInterval.value) < minPRF) {
+                    prfInterval.value = minPRF;
+                }
+                if (parseInt(sampleFrequency.value) < minSample) {
+                    sampleFrequency.value = minSample;
+                }
+            }
+
+            // Validate intervals only for specific devices and PRF configuration
+            if (!validateIntervals()) {
+                document.getElementById('output').innerHTML = '<em>Configuration error: PRF/Reporting Interval must be a multiple or equal to Sensor/Sample Frequency.</em>';
                 currentCommand = "";
                 return;
             }
