@@ -1209,9 +1209,9 @@
                     const lightConfig = document.getElementById('lightConfig').value;
                     if (lightConfig === "on") {
                         const lightTimeGap = document.getElementById('lightTimeGap').value;
-                        currentCommand = `AT+LIGHT=1,500,${lightTimeGap}`;
+                        currentCommand = `AT+LIGHT=1,172,${lightTimeGap}`;
                     } else if (lightConfig === "off") {
-                        currentCommand = `AT+LIGHT=0,500,360`;
+                        currentCommand = `AT+LIGHT=0,172,360`;
                     } else {
                         currentCommand = "";
                     }
