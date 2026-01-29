@@ -124,11 +124,11 @@
             display: block;
             margin-bottom: 8px;
         }
-    
+   
         .checkbox-item input[type="checkbox"] {
             margin-right: 8px;
         }
-    
+   
         .checkbox-item label {
             display: inline;
             font-weight: normal;
@@ -178,12 +178,12 @@
             margin-left: 5px;
             cursor: pointer;
         }
-        
+       
         .tooltip {
             position: relative;
             display: inline-block;
         }
-        
+       
         .tooltip .tooltiptext {
             visibility: hidden;
             width: 500px;
@@ -229,6 +229,88 @@
             top: 0;
             z-index: 10;
         }
+       
+        /* Sensor notes styling */
+        .sensor-notes {
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+       
+        .sensor-notes h4 {
+            color: #31708f;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+       
+        .sensor-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 5px;
+        }
+       
+        .sensor-table th, .sensor-table td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: left;
+        }
+       
+        .sensor-table th {
+            background-color: #e9f7fe;
+            font-weight: bold;
+        }
+       
+        .sensor-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+       
+        .light-note {
+            margin-top: 10px;
+            padding: 8px;
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #856404;
+        }
+       
+        .sensor-command-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+       
+        .sensor-command-table th, .sensor-command-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+       
+        .sensor-command-table th {
+            background-color: #e9f7fe;
+            font-weight: bold;
+        }
+       
+        .sensor-command-table tr:hover {
+            background-color: #f0f8ff;
+            cursor: pointer;
+        }
+       
+        .sensor-command-table tr.selected {
+            background-color: #d4edda;
+        }
+       
+        .sensor-command-table code {
+            font-family: monospace;
+            background-color: #f8f9fa;
+            padding: 2px 4px;
+            border-radius: 3px;
+            border: 1px solid #e9ecef;
+        }
     </style>
 </head>
 <body>
@@ -258,7 +340,7 @@
         </div>
 
         <!-- Configuration Sections (initially hidden) -->
-        
+       
         <!-- IP Configuration -->
         <div id="ipConfigSection" class="form-group hidden">
             <h3>IP Configuration</h3>
@@ -363,28 +445,129 @@
                 <div id="lightTimeGapWarning" class="warning hidden">Note: Lower time gap will affect battery life</div>
                 <div class="info">Time Gap Definition: It is the interval between two events/triggers to avoid multiple events</div>
             </div>
+            <!-- Light Interrupt Note for BSF/BSM -->
+            <div id="bsfLightNote" class="light-note hidden">
+                <strong>Note for BSF/BSM devices:</strong><br>
+                For firmware V36 onwards, use this command to enable light trigger:<br>
+                <code>AT+LIGHT=1,516,3600</code>
+            </div>
         </div>
 
         <!-- Sensor Configuration -->
         <div id="sensorConfigSection" class="form-group hidden">
             <h3>Sensor Configuration</h3>
-            <div class="checkbox-group">
+            <div id="sensorCheckboxes" class="checkbox-group">
                 <div class="checkbox-item">
-                    <input type="checkbox" id="tempSensor" onchange="updateCommand()">
+                    <input type="checkbox" id="tempSensor" onchange="updateSensorCommandForBSF(); updateCommand()">
                     <label for="tempSensor">Temperature Sensor</label>
                 </div>
                 <div class="checkbox-item" id="humiditySensorItem">
-                    <input type="checkbox" id="humiditySensor" onchange="updateCommand()">
+                    <input type="checkbox" id="humiditySensor" onchange="updateSensorCommandForBSF(); updateCommand()">
                     <label for="humiditySensor">Humidity Sensor</label>
                 </div>
                 <div class="checkbox-item">
-                    <input type="checkbox" id="lightSensor" onchange="updateCommand()">
+                    <input type="checkbox" id="lightSensor" onchange="updateSensorCommandForBSF(); updateCommand()">
                     <label for="lightSensor">Ambient Sensor</label>
                 </div>
                 <div class="checkbox-item">
                     <input type="checkbox" id="noneSensor" onchange="handleNoneSensor()">
                     <label for="noneSensor">None</label>
                 </div>
+            </div>
+           
+            <!-- BSF/BSM Sensor Command Table -->
+            <div id="bsfSensorCommandTable" class="sensor-notes hidden">
+                <h4>Use the below command set to enable sensors as per requirement (this will work on both old and new firmware):</h4>
+                <table class="sensor-command-table" id="sensorCommandTable">
+                    <thead>
+                        <tr>
+                            <th>Sensor Settings</th>
+                            <th>Command</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr onclick="selectSensorRow(this, 0)">
+                            <td>All sensors off</td>
+                            <td><code>AT+SENSORMASK=0</code></td>
+                        </tr>
+                        <tr onclick="selectSensorRow(this, 217)">
+                            <td>On Ambient only</td>
+                            <td><code>AT+SENSORMASK=217</code></td>
+                        </tr>
+                        <tr onclick="selectSensorRow(this, 218)">
+                            <td>On Temperature only</td>
+                            <td><code>AT+SENSORMASK=218</code></td>
+                        </tr>
+                        <tr onclick="selectSensorRow(this, 220)">
+                            <td>On Humidity only</td>
+                            <td><code>AT+SENSORMASK=220</code></td>
+                        </tr>
+                        <tr onclick="selectSensorRow(this, 219)">
+                            <td>On both Temperature, Ambient</td>
+                            <td><code>AT+SENSORMASK=219</code></td>
+                        </tr>
+                        <tr onclick="selectSensorRow(this, 221)">
+                            <td>On both Humidity, Ambient</td>
+                            <td><code>AT+SENSORMASK=221</code></td>
+                        </tr>
+                        <tr onclick="selectSensorRow(this, 222)">
+                            <td>On both Temperature and Humidity</td>
+                            <td><code>AT+SENSORMASK=222</code></td>
+                        </tr>
+                        <tr onclick="selectSensorRow(this, 223)">
+                            <td>Temperature, Humidity, Ambient, all three on</td>
+                            <td><code>AT+SENSORMASK=223</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+           
+            <!-- Sensor Notes for other devices -->
+            <div id="bsfSensorNotes" class="sensor-notes hidden">
+                <h4>BSF/BSM Sensor Configuration Notes (Firmware V36 onwards)</h4>
+                <p>If device firmware of BSF/BSM is V36 or onwards, use the below command set to enable sensors as per requirement:</p>
+                <table class="sensor-table">
+                    <thead>
+                        <tr>
+                            <th>Sensor Settings</th>
+                            <th>Command</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>All sensors off</td>
+                            <td><code>AT+SENSORMASK=0</code></td>
+                        </tr>
+                        <tr>
+                            <td>On Ambient only</td>
+                            <td><code>AT+SENSORMASK=217</code></td>
+                        </tr>
+                        <tr>
+                            <td>On Temperature only</td>
+                            <td><code>AT+SENSORMASK=218</code></td>
+                        </tr>
+                        <tr>
+                            <td>On Humidity only</td>
+                            <td><code>AT+SENSORMASK=220</code></td>
+                        </tr>
+                        <tr>
+                            <td>On both Temperature, Ambient</td>
+                            <td><code>AT+SENSORMASK=219</code></td>
+                        </tr>
+                        <tr>
+                            <td>On both Humidity, Ambient</td>
+                            <td><code>AT+SENSORMASK=221</code></td>
+                        </tr>
+                        <tr>
+                            <td>On both Temperature and Humidity</td>
+                            <td><code>AT+SENSORMASK=222</code></td>
+                        </tr>
+                        <tr>
+                            <td>Temperature, Humidity, Ambient, all three on</td>
+                            <td><code>AT+SENSORMASK=223</code></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -434,7 +617,7 @@
                     <label for="motionTimer">Motion Timer (min 600 seconds):</label>
                     <input type="number" id="motionTimer" min="600" value="600" onchange="updateCommand()">
                     <div class="definition">When device moves then PRF changes according to set motion timer</div>
-                    
+                   
                     <label for="standstillTimer">Standstill Timer (min 1200 seconds):</label>
                     <input type="number" id="standstillTimer" min="1200" value="1200" onchange="updateCommand()">
                     <div class="definition">When device is stationary, PRF changes according to set standstill timer</div>
@@ -513,7 +696,10 @@
     <script>
         // Track which configurations have been selected
         const selectedConfigs = new Set();
-        
+       
+        // Track selected sensor mask for BSF/BSM
+        let selectedSensorMask = null;
+       
         // Configuration options for each device type
         const deviceConfigs = {
             "BSF/BSM": [
@@ -631,18 +817,18 @@
             const shockForce = document.getElementById('shockForce').value;
             const tableBody = document.getElementById('thresholdTableBody');
             const mapping = thresholdMappings[shockForce];
-            
+           
             // Clear existing table content
             tableBody.innerHTML = '';
-            
+           
             // Create a container for the table with better scrolling
             const tableContainer = document.createElement('div');
             tableContainer.className = 'threshold-table-container';
-            
+           
             // Create the table
             const table = document.createElement('table');
             table.className = 'threshold-table';
-            
+           
             // Create the exact table header
             const headerRow = document.createElement('tr');
             headerRow.innerHTML = `
@@ -650,10 +836,10 @@
                 <th>Force (mG)</th>
             `;
             table.appendChild(headerRow);
-            
+           
             // Add exactly the threshold values you requested
             const requestedThresholds = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 255];
-            
+           
             requestedThresholds.forEach(threshold => {
                 // Find the index for this threshold (threshold 1 is at index 0)
                 const index = threshold - 1;
@@ -666,14 +852,14 @@
                     table.appendChild(row);
                 }
             });
-            
+           
             // Add the table to the container
             tableContainer.appendChild(table);
-            
+           
             // Clear the table body and add the container
             tableBody.innerHTML = '';
             tableBody.appendChild(tableContainer);
-            
+           
             // Add a note about the pattern with precise values
             const forceIncrement = (mapping.values[1].force - mapping.values[0].force).toFixed(4);
             const noteRow = document.createElement('div');
@@ -685,6 +871,117 @@
             tableBody.appendChild(noteRow);
         }
 
+        function selectSensorRow(row, maskValue) {
+            // Remove selected class from all rows
+            const rows = document.querySelectorAll('#sensorCommandTable tbody tr');
+            rows.forEach(r => r.classList.remove('selected'));
+           
+            // Add selected class to clicked row
+            row.classList.add('selected');
+           
+            // Store the selected mask value
+            selectedSensorMask = maskValue;
+           
+            // Update the checkboxes based on the selection
+            updateCheckboxesFromMask(maskValue);
+           
+            // Update the command
+            updateCommand();
+        }
+
+        function updateCheckboxesFromMask(maskValue) {
+            const tempSensor = document.getElementById('tempSensor');
+            const humiditySensor = document.getElementById('humiditySensor');
+            const lightSensor = document.getElementById('lightSensor');
+            const noneSensor = document.getElementById('noneSensor');
+           
+            // Reset all checkboxes
+            tempSensor.checked = false;
+            humiditySensor.checked = false;
+            lightSensor.checked = false;
+            noneSensor.checked = false;
+           
+            // Update checkboxes based on mask value
+            switch(maskValue) {
+                case 0:
+                    noneSensor.checked = true;
+                    break;
+                case 217: // Ambient only
+                    lightSensor.checked = true;
+                    break;
+                case 218: // Temperature only
+                    tempSensor.checked = true;
+                    break;
+                case 220: // Humidity only
+                    humiditySensor.checked = true;
+                    break;
+                case 219: // Temperature + Ambient
+                    tempSensor.checked = true;
+                    lightSensor.checked = true;
+                    break;
+                case 221: // Humidity + Ambient
+                    humiditySensor.checked = true;
+                    lightSensor.checked = true;
+                    break;
+                case 222: // Temperature + Humidity
+                    tempSensor.checked = true;
+                    humiditySensor.checked = true;
+                    break;
+                case 223: // All three
+                    tempSensor.checked = true;
+                    humiditySensor.checked = true;
+                    lightSensor.checked = true;
+                    break;
+            }
+        }
+
+        function updateSensorCommandForBSF() {
+            const deviceType = document.getElementById('deviceType').value;
+            const configType = document.getElementById('configType').value;
+           
+            if (deviceType === 'BSF/BSM' && configType === "Sensor Configuration") {
+                const tempSensor = document.getElementById('tempSensor').checked;
+                const humiditySensor = document.getElementById('humiditySensor').checked;
+                const ambientSensor = document.getElementById('lightSensor').checked;
+                const noneSensor = document.getElementById('noneSensor').checked;
+               
+                // Update the selected sensor mask based on checkboxes
+                if (noneSensor) {
+                    selectedSensorMask = 0;
+                } else if (ambientSensor && !tempSensor && !humiditySensor) {
+                    selectedSensorMask = 217;
+                } else if (tempSensor && !ambientSensor && !humiditySensor) {
+                    selectedSensorMask = 218;
+                } else if (humiditySensor && !tempSensor && !ambientSensor) {
+                    selectedSensorMask = 220;
+                } else if (tempSensor && ambientSensor && !humiditySensor) {
+                    selectedSensorMask = 219;
+                } else if (humiditySensor && ambientSensor && !tempSensor) {
+                    selectedSensorMask = 221;
+                } else if (tempSensor && humiditySensor && !ambientSensor) {
+                    selectedSensorMask = 222;
+                } else if (tempSensor && humiditySensor && ambientSensor) {
+                    selectedSensorMask = 223;
+                } else {
+                    selectedSensorMask = null;
+                }
+               
+                // Update the selected row in the table
+                const rows = document.querySelectorAll('#sensorCommandTable tbody tr');
+                rows.forEach(r => r.classList.remove('selected'));
+               
+                if (selectedSensorMask !== null) {
+                    // Find and select the corresponding row
+                    const rowIndex = [0, 217, 218, 220, 219, 221, 222, 223].indexOf(selectedSensorMask);
+                    if (rowIndex !== -1) {
+                        rows[rowIndex].classList.add('selected');
+                    }
+                }
+               
+                updateCommand();
+            }
+        }
+
         function handleNoneSensor() {
             const noneSensor = document.getElementById('noneSensor');
             if (noneSensor.checked) {
@@ -692,23 +989,24 @@
                 document.getElementById('humiditySensor').checked = false;
                 document.getElementById('lightSensor').checked = false;
             }
+            updateSensorCommandForBSF();
             updateCommand();
         }
 
         function validateBLEScanTime() {
             const bleScanTime = document.getElementById('bleScanTime');
             const warning = document.getElementById('bleScanTimeWarning');
-            
+           
             // Validate min and max values
             if (bleScanTime.value < 10) {
                 bleScanTime.value = 10;
             } else if (bleScanTime.value > 100) {
                 bleScanTime.value = 100;
             }
-            
+           
             // Round to nearest multiple of 10
             bleScanTime.value = Math.round(bleScanTime.value / 10) * 10;
-            
+           
             // Show warning if scan time is more than 30 seconds
             if (bleScanTime.value > 30) {
                 warning.classList.remove('hidden');
@@ -720,12 +1018,12 @@
         function validateShockTimeGap() {
             const shockTimeGap = document.getElementById('shockTimeGap');
             const warning = document.getElementById('shockTimeGapWarning');
-            
+           
             // Validate min value
             if (shockTimeGap.value < 360) {
                 shockTimeGap.value = 360;
             }
-            
+           
             // Show warning if time gap is less than 900 seconds
             if (shockTimeGap.value < 900) {
                 warning.classList.remove('hidden');
@@ -737,12 +1035,12 @@
         function validateLightTimeGap() {
             const lightTimeGap = document.getElementById('lightTimeGap');
             const warning = document.getElementById('lightTimeGapWarning');
-            
+           
             // Validate min value
             if (lightTimeGap.value < 360) {
                 lightTimeGap.value = 360;
             }
-            
+           
             // Show warning if time gap is less than 900 seconds
             if (lightTimeGap.value < 900) {
                 warning.classList.remove('hidden');
@@ -755,7 +1053,7 @@
             const bleConfig = document.getElementById('bleConfig').value;
             const bleScanTimeInput = document.getElementById('bleScanTimeInput');
             bleScanTimeInput.style.display = bleConfig === 'on' ? 'block' : 'none';
-            
+           
             // Validate BLE scan time when showing the input
             if (bleConfig === 'on') {
                 validateBLEScanTime();
@@ -766,7 +1064,7 @@
             const shockConfig = document.getElementById('shockConfig').value;
             const shockInputs = document.getElementById('shockInputs');
             shockInputs.style.display = shockConfig === 'on' ? 'block' : 'none';
-            
+           
             // Validate shock time gap when showing the input
             if (shockConfig === 'on') {
                 validateShockTimeGap();
@@ -778,10 +1076,19 @@
             const lightConfig = document.getElementById('lightConfig').value;
             const lightInputs = document.getElementById('lightInputs');
             lightInputs.style.display = lightConfig === 'on' ? 'block' : 'none';
-            
+           
             // Validate light time gap when showing the input
             if (lightConfig === 'on') {
                 validateLightTimeGap();
+            }
+           
+            // Show/hide BSF light note
+            const deviceType = document.getElementById('deviceType').value;
+            const bsfLightNote = document.getElementById('bsfLightNote');
+            if (deviceType === 'BSF/BSM' && lightConfig === 'on') {
+                bsfLightNote.classList.remove('hidden');
+            } else {
+                bsfLightNote.classList.add('hidden');
             }
         }
 
@@ -803,7 +1110,7 @@
         function validateDeviceInput(input, isPRF = true) {
             const deviceType = document.getElementById('deviceType').value;
             let minValue;
-            
+           
             if (deviceType === 'BeeLabel') {
                 minValue = 600;
             } else if (deviceType === 'BAG 5G') {
@@ -813,7 +1120,7 @@
             } else {
                 return; // No validation for other devices
             }
-            
+           
             if (parseInt(input.value) < minValue) {
                 input.value = minValue;
             }
@@ -828,11 +1135,12 @@
             // Clear previous options and selections
             configTypeSelect.innerHTML = '<option value="None">-- Select Configuration --</option>';
             selectedConfigs.clear();
+            selectedSensorMask = null;
 
             if (deviceType !== 'None') {
                 // Show configuration selector
                 configSelector.classList.remove('hidden');
-                
+               
                 // Populate configuration options based on device type
                 const configs = deviceConfigs[deviceType];
                 configs.forEach(config => {
@@ -848,7 +1156,8 @@
                     document.getElementById('sampleFrequency').min = 600;
                     document.getElementById('prfInterval').value = 600;
                     document.getElementById('sampleFrequency').value = 600;
-                    document.getElementById('humiditySensorItem').style.display = 'none';
+                    // Show all sensor options for BeeLabel
+                    document.getElementById('humiditySensorItem').style.display = 'block';
                 } else if (deviceType === 'BAG 5G') {
                     document.getElementById('prfInterval').min = 900;
                     document.getElementById('sampleFrequency').min = 900;
@@ -891,6 +1200,34 @@
                 document.getElementById('routerConfig').classList.add('hidden');
             }
 
+            // Show/hide BSF sensor notes and command table
+            const bsfSensorNotes = document.getElementById('bsfSensorNotes');
+            const bsfSensorCommandTable = document.getElementById('bsfSensorCommandTable');
+            const sensorCheckboxes = document.getElementById('sensorCheckboxes');
+           
+            if (deviceType === 'BSF/BSM') {
+                bsfSensorNotes.classList.add('hidden'); // Hide old notes
+                bsfSensorCommandTable.classList.remove('hidden'); // Show new table
+                sensorCheckboxes.classList.add('hidden'); // Hide checkboxes for BSF/BSM
+            } else {
+                bsfSensorNotes.classList.add('hidden');
+                bsfSensorCommandTable.classList.add('hidden');
+                sensorCheckboxes.classList.remove('hidden');
+                // Show sensor options for other devices
+                if (deviceType === 'BeeLabel' || deviceType === 'BAG 5G') {
+                    document.getElementById('humiditySensorItem').style.display = 'block';
+                } else {
+                    document.getElementById('humiditySensorItem').style.display = 'none';
+                }
+            }
+
+            // Hide light note initially
+            document.getElementById('bsfLightNote').classList.add('hidden');
+
+            // Clear selected rows in sensor table
+            const rows = document.querySelectorAll('#sensorCommandTable tbody tr');
+            rows.forEach(r => r.classList.remove('selected'));
+
             // Refresh the command page
             refreshCommandPage();
             updateCommand();
@@ -899,7 +1236,7 @@
         function handleConfigChange() {
             const configType = document.getElementById('configType').value;
             const deviceType = document.getElementById('deviceType').value;
-            
+           
             // Hide all configuration sections first
             document.querySelectorAll('.form-group').forEach(section => {
                 section.classList.add('hidden');
@@ -927,7 +1264,7 @@
                             document.getElementById('sampleFrequency').min = 300;
                         }
                     }
-                } 
+                }
                 // Special handling for GPS Configuration for Router
                 else if (configType === "GPS Configuration" && deviceType === 'Router') {
                     document.getElementById('routerGPSSection').classList.remove('hidden');
@@ -938,7 +1275,7 @@
                 }
                 selectedConfigs.add(configType);
             }
-            
+           
             // Show firmware notes for deactivation configuration
             if (configType === "Deactivation Configuration") {
                 const deviceType = document.getElementById('deviceType').value;
@@ -948,7 +1285,7 @@
                 document.getElementById('bsfFWNote').classList.add('hidden');
                 document.getElementById('beeLabelFWNote').classList.add('hidden');
             }
-            
+           
             updateCommand();
         }
 
@@ -969,7 +1306,7 @@
             document.getElementById('solarBLEScanModeConfig').value = 'none';
             document.getElementById('solarPRFConfig').value = 'none';
             document.getElementById('routerGPSConfig').value = 'none';
-            
+           
             // Reset PRF values based on device type
             const deviceType = document.getElementById('deviceType').value;
             if (deviceType === 'BeeLabel') {
@@ -984,7 +1321,7 @@
             } else if (deviceType === 'Router') {
                 document.getElementById('routerPRF').value = 300;
             }
-            
+           
             document.getElementById('motionTimer').value = 600;
             document.getElementById('standstillTimer').value = 1200;
             document.getElementById('solarPRFInputs').style.display = 'none';
@@ -1003,6 +1340,12 @@
             document.getElementById('bsfFWNote').classList.add('hidden');
             document.getElementById('beeLabelFWNote').classList.add('hidden');
 
+            // Hide light note
+            document.getElementById('bsfLightNote').classList.add('hidden');
+
+            // Clear selected sensor mask
+            selectedSensorMask = null;
+
             // Clear the output
             document.getElementById('output').innerHTML = '<em>No command generated. Please select configuration options.</em>';
             currentCommand = "";
@@ -1011,7 +1354,7 @@
         function validateIntervals() {
             const deviceType = document.getElementById('deviceType').value;
             const configType = document.getElementById('configType').value;
-            
+           
             // Only validate for specific devices and when PRF Configuration is selected
             if (['BSF/BSM', 'BeeLabel', 'BAG 5G'].includes(deviceType) && configType === "PRF Configuration") {
                 const prfInterval = parseInt(document.getElementById('prfInterval').value);
@@ -1050,7 +1393,7 @@
             if (['BSF/BSM', 'BeeLabel', 'BAG 5G'].includes(deviceType) && configType === "PRF Configuration") {
                 const prfInterval = document.getElementById('prfInterval');
                 const sampleFrequency = document.getElementById('sampleFrequency');
-                
+               
                 // Get minimum values based on device type
                 let minPRF, minSample;
                 if (deviceType === 'BeeLabel') {
@@ -1217,27 +1560,37 @@
                     }
                 }
                 else if (configType === "Sensor Configuration") {
-                    const tempSensor = document.getElementById('tempSensor').checked;
-                    const ambientSensor = document.getElementById('lightSensor').checked;
-                    const humiditySensor = deviceType === 'BeeLabel' ? false : document.getElementById('humiditySensor').checked;
-                    const noneSensor = document.getElementById('noneSensor').checked;
-
-                    // If "None" is selected, set sensor mask to 0
-                    if (noneSensor) {
-                        currentCommand = `AT+SENSORMASK=0`;
-                    } 
-                    // Generate AT+SENSORMASK only if at least one sensor is selected
-                    else if (tempSensor || ambientSensor || humiditySensor) {
-                        const sensorMask = generateSensorMask(tempSensor, humiditySensor, ambientSensor);
-                        currentCommand = `AT+SENSORMASK=${sensorMask}`;
+                    // Special handling for BSF/BSM - use the table selection
+                    if (deviceType === 'BSF/BSM') {
+                        if (selectedSensorMask !== null) {
+                            currentCommand = `AT+SENSORMASK=${selectedSensorMask}`;
+                        } else {
+                            currentCommand = "";
+                        }
                     } else {
-                        currentCommand = "";
+                        // Original logic for other devices
+                        const tempSensor = document.getElementById('tempSensor').checked;
+                        const ambientSensor = document.getElementById('lightSensor').checked;
+                        const humiditySensor = document.getElementById('humiditySensor').checked;
+                        const noneSensor = document.getElementById('noneSensor').checked;
+
+                        // If "None" is selected, set sensor mask to 0
+                        if (noneSensor) {
+                            currentCommand = `AT+SENSORMASK=0`;
+                        }
+                        // Generate AT+SENSORMASK only if at least one sensor is selected
+                        else if (tempSensor || ambientSensor || humiditySensor) {
+                            const sensorMask = generateSensorMask(tempSensor, humiditySensor, ambientSensor);
+                            currentCommand = `AT+SENSORMASK=${sensorMask}`;
+                        } else {
+                            currentCommand = "";
+                        }
                     }
                 }
                 else if (configType === "PRF Configuration") {
                     const prfInterval = document.getElementById('prfInterval').value;
                     const sampleFrequency = document.getElementById('sampleFrequency').value;
-                    
+                   
                     if (prfInterval === sampleFrequency) {
                         currentCommand = `AT+TIMEGAP=0,${prfInterval},1,${prfInterval} & AT+SAMPLEMODE=0,0`;
                     } else {
@@ -1257,7 +1610,11 @@
             // Display the generated command
             const outputDiv = document.getElementById('output');
             if (currentCommand === "") {
-                outputDiv.innerHTML = "<em>No command generated. Please select configuration options.</em>";
+                if (deviceType === 'BSF/BSM' && configType === "Sensor Configuration") {
+                    outputDiv.innerHTML = "<em>Please select a sensor configuration from the table above.</em>";
+                } else {
+                    outputDiv.innerHTML = "<em>No command generated. Please select configuration options.</em>";
+                }
             } else {
                 outputDiv.innerHTML = `<pre class="command-output">${currentCommand}</pre>`;
             }
