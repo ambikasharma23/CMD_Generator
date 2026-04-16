@@ -164,7 +164,6 @@
             border-radius: 3px;
             border-left: 2px solid #d9534f;
         }
-        /* Add to existing CSS */
         .info-icon {
             display: inline-block;
             width: 14px;
@@ -230,7 +229,6 @@
             z-index: 10;
         }
        
-        /* Sensor notes styling */
         .sensor-notes {
             margin-top: 15px;
             padding: 12px;
@@ -310,6 +308,35 @@
             padding: 2px 4px;
             border-radius: 3px;
             border: 1px solid #e9ecef;
+        }
+
+        .prf-option-selector {
+            margin-bottom: 15px;
+        }
+
+        .prf-note {
+            background-color: #d9edf7;
+            border: 1px solid #bce8f1;
+            color: #31708f;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+
+        .data-warning {
+            background-color: #fcf8e3;
+            border: 1px solid #faebcc;
+            color: #8a6d3b;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+
+        .input-error {
+            border-color: #d9534f !important;
+            background-color: #fff5f5 !important;
         }
     </style>
 </head>
@@ -456,28 +483,10 @@
         <!-- Sensor Configuration -->
         <div id="sensorConfigSection" class="form-group hidden">
             <h3>Sensor Configuration</h3>
-            <div id="sensorCheckboxes" class="checkbox-group">
-                <div class="checkbox-item">
-                    <input type="checkbox" id="tempSensor" onchange="updateSensorCommandForBSF(); updateCommand()">
-                    <label for="tempSensor">Temperature Sensor</label>
-                </div>
-                <div class="checkbox-item" id="humiditySensorItem">
-                    <input type="checkbox" id="humiditySensor" onchange="updateSensorCommandForBSF(); updateCommand()">
-                    <label for="humiditySensor">Humidity Sensor</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="lightSensor" onchange="updateSensorCommandForBSF(); updateCommand()">
-                    <label for="lightSensor">Ambient Sensor</label>
-                </div>
-                <div class="checkbox-item">
-                    <input type="checkbox" id="noneSensor" onchange="handleNoneSensor()">
-                    <label for="noneSensor">None</label>
-                </div>
-            </div>
-           
-            <!-- BSF/BSM Sensor Command Table -->
-            <div id="bsfSensorCommandTable" class="sensor-notes hidden">
-                <h4>Use the below command set to enable sensors as per requirement (this will work on both old and new firmware):</h4>
+            
+            <!-- BSF/BSM/BeeLabel/BAG 5G Sensor Command Table -->
+            <div id="deviceSensorCommandTable" class="sensor-notes">
+                <h4>Use the below command set to enable sensors as per requirement:</h4>
                 <table class="sensor-command-table" id="sensorCommandTable">
                     <thead>
                         <tr>
@@ -521,64 +530,43 @@
                     </tbody>
                 </table>
             </div>
-           
-            <!-- Sensor Notes for other devices -->
-            <div id="bsfSensorNotes" class="sensor-notes hidden">
-                <h4>BSF/BSM Sensor Configuration Notes (Firmware V36 onwards)</h4>
-                <p>If device firmware of BSF/BSM is V36 or onwards, use the below command set to enable sensors as per requirement:</p>
-                <table class="sensor-table">
-                    <thead>
-                        <tr>
-                            <th>Sensor Settings</th>
-                            <th>Command</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>All sensors off</td>
-                            <td><code>AT+SENSORMASK=0</code></td>
-                        </tr>
-                        <tr>
-                            <td>On Ambient only</td>
-                            <td><code>AT+SENSORMASK=217</code></td>
-                        </tr>
-                        <tr>
-                            <td>On Temperature only</td>
-                            <td><code>AT+SENSORMASK=218</code></td>
-                        </tr>
-                        <tr>
-                            <td>On Humidity only</td>
-                            <td><code>AT+SENSORMASK=220</code></td>
-                        </tr>
-                        <tr>
-                            <td>On both Temperature, Ambient</td>
-                            <td><code>AT+SENSORMASK=219</code></td>
-                        </tr>
-                        <tr>
-                            <td>On both Humidity, Ambient</td>
-                            <td><code>AT+SENSORMASK=221</code></td>
-                        </tr>
-                        <tr>
-                            <td>On both Temperature and Humidity</td>
-                            <td><code>AT+SENSORMASK=222</code></td>
-                        </tr>
-                        <tr>
-                            <td>Temperature, Humidity, Ambient, all three on</td>
-                            <td><code>AT+SENSORMASK=223</code></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
         </div>
 
-        <!-- Regular PRF Configuration (for non-Solar devices) -->
+        <!-- Regular PRF Configuration (for BSF/BSM, BeeLabel, BAG 5G) -->
         <div id="prfConfigSection" class="form-group hidden">
             <h3>PRF Configuration</h3>
-            <label for="prfInterval">PRF/Reporting Interval (In seconds):</label>
-            <input type="number" id="prfInterval" min="300" value="300" onchange="updateCommand()" oninput="validateDeviceInput(this, true)">
-            <label for="sampleFrequency">Sensor/Sample Frequency (In seconds):</label>
-            <input type="number" id="sampleFrequency" min="300" value="300" onchange="updateCommand()" oninput="validateDeviceInput(this, false)">
-            <!-- <div class="definition">Note: PRF should be multiple of sample/sensor frequency</div> -->
+            
+            <!-- PRF option selector for BSF/BSM, BeeLabel, BAG 5G -->
+            <div id="prfOptionSelector" class="prf-option-selector">
+                <label for="prfOption">Select PRF Configuration Type:</label>
+                <select id="prfOption" onchange="togglePRFOptions()">
+                    <option value="none">-- Select Option --</option>
+                    <option value="prfOnly">PRF only</option>
+                    <option value="prfAndSensor">PRF and Sensor Sample both</option>
+                </select>
+            </div>
+            
+            <!-- PRF only input -->
+            <div id="prfOnlyInput" class="hidden config-section">
+                <label for="prfOnlyValue">PRF (In seconds):</label>
+                <input type="text" id="prfOnlyValue" value="300" onkeypress="handleEnterKey(event, 'prfOnly')" onblur="validatePRFOnlyOnBlur()" oninput="clearPRFOnlyError()">
+                <div id="prfMinWarning" class="warning hidden"></div>
+            </div>
+            
+            <!-- PRF and Sensor Sample both inputs -->
+            <div id="prfAndSensorInput" class="hidden config-section">
+                <label for="prfInterval">PRF/Reporting Interval (In seconds):</label>
+                <input type="text" id="prfInterval" value="300" onkeypress="handleEnterKey(event, 'prfAndSensor')" onblur="validatePRFAndSampleOnBlur()" oninput="clearPRFAndSampleError()">
+                
+                <label for="sampleFrequency">Sensor/Sample Frequency (In seconds):</label>
+                <input type="text" id="sampleFrequency" value="300" onkeypress="handleEnterKey(event, 'prfAndSensor')" onblur="validatePRFAndSampleOnBlur()" oninput="clearPRFAndSampleError()">
+                
+                <div id="prfSampleWarning" class="warning hidden"></div>
+                <div id="dataStorageWarning" class="data-warning hidden"></div>
+            </div>
+            
+            <!-- PRF Note -->
+            <div id="prfNote" class="prf-note"></div>
         </div>
 
         <!-- Deactivation Configuration -->
@@ -697,8 +685,11 @@
         // Track which configurations have been selected
         const selectedConfigs = new Set();
        
-        // Track selected sensor mask for BSF/BSM
+        // Track selected sensor mask
         let selectedSensorMask = null;
+        
+        // Track validation errors
+        let prfValidationError = false;
        
         // Configuration options for each device type
         const deviceConfigs = {
@@ -818,18 +809,14 @@
             const tableBody = document.getElementById('thresholdTableBody');
             const mapping = thresholdMappings[shockForce];
            
-            // Clear existing table content
             tableBody.innerHTML = '';
            
-            // Create a container for the table with better scrolling
             const tableContainer = document.createElement('div');
             tableContainer.className = 'threshold-table-container';
            
-            // Create the table
             const table = document.createElement('table');
             table.className = 'threshold-table';
            
-            // Create the exact table header
             const headerRow = document.createElement('tr');
             headerRow.innerHTML = `
                 <th>Threshold</th>
@@ -837,11 +824,9 @@
             `;
             table.appendChild(headerRow);
            
-            // Add exactly the threshold values you requested
             const requestedThresholds = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 255];
            
             requestedThresholds.forEach(threshold => {
-                // Find the index for this threshold (threshold 1 is at index 0)
                 const index = threshold - 1;
                 if (index < mapping.values.length && index >= 0) {
                     const row = document.createElement('tr');
@@ -853,143 +838,18 @@
                 }
             });
            
-            // Add the table to the container
             tableContainer.appendChild(table);
-           
-            // Clear the table body and add the container
             tableBody.innerHTML = '';
             tableBody.appendChild(tableContainer);
-           
-            // Add a note about the pattern with precise values
-            const forceIncrement = (mapping.values[1].force - mapping.values[0].force).toFixed(4);
-            const noteRow = document.createElement('div');
-            // noteRow.innerHTML = `
-            //     <div style="text-align: center; font-style: italic; margin-top: 10px;">
-            //         Pattern continues linearly. Threshold n = ${mapping.values[0].force} + (n-1) × ${forceIncrement} mg
-            //     </div>
-            // `;
-            tableBody.appendChild(noteRow);
         }
 
         function selectSensorRow(row, maskValue) {
-            // Remove selected class from all rows
             const rows = document.querySelectorAll('#sensorCommandTable tbody tr');
             rows.forEach(r => r.classList.remove('selected'));
            
-            // Add selected class to clicked row
             row.classList.add('selected');
-           
-            // Store the selected mask value
             selectedSensorMask = maskValue;
            
-            // Update the checkboxes based on the selection
-            updateCheckboxesFromMask(maskValue);
-           
-            // Update the command
-            updateCommand();
-        }
-
-        function updateCheckboxesFromMask(maskValue) {
-            const tempSensor = document.getElementById('tempSensor');
-            const humiditySensor = document.getElementById('humiditySensor');
-            const lightSensor = document.getElementById('lightSensor');
-            const noneSensor = document.getElementById('noneSensor');
-           
-            // Reset all checkboxes
-            tempSensor.checked = false;
-            humiditySensor.checked = false;
-            lightSensor.checked = false;
-            noneSensor.checked = false;
-           
-            // Update checkboxes based on mask value
-            switch(maskValue) {
-                case 0:
-                    noneSensor.checked = true;
-                    break;
-                case 217: // Ambient only
-                    lightSensor.checked = true;
-                    break;
-                case 218: // Temperature only
-                    tempSensor.checked = true;
-                    break;
-                case 220: // Humidity only
-                    humiditySensor.checked = true;
-                    break;
-                case 219: // Temperature + Ambient
-                    tempSensor.checked = true;
-                    lightSensor.checked = true;
-                    break;
-                case 221: // Humidity + Ambient
-                    humiditySensor.checked = true;
-                    lightSensor.checked = true;
-                    break;
-                case 222: // Temperature + Humidity
-                    tempSensor.checked = true;
-                    humiditySensor.checked = true;
-                    break;
-                case 223: // All three
-                    tempSensor.checked = true;
-                    humiditySensor.checked = true;
-                    lightSensor.checked = true;
-                    break;
-            }
-        }
-
-        function updateSensorCommandForBSF() {
-            const deviceType = document.getElementById('deviceType').value;
-            const configType = document.getElementById('configType').value;
-           
-            if (deviceType === 'BSF/BSM' && configType === "Sensor Configuration") {
-                const tempSensor = document.getElementById('tempSensor').checked;
-                const humiditySensor = document.getElementById('humiditySensor').checked;
-                const ambientSensor = document.getElementById('lightSensor').checked;
-                const noneSensor = document.getElementById('noneSensor').checked;
-               
-                // Update the selected sensor mask based on checkboxes
-                if (noneSensor) {
-                    selectedSensorMask = 0;
-                } else if (ambientSensor && !tempSensor && !humiditySensor) {
-                    selectedSensorMask = 217;
-                } else if (tempSensor && !ambientSensor && !humiditySensor) {
-                    selectedSensorMask = 218;
-                } else if (humiditySensor && !tempSensor && !ambientSensor) {
-                    selectedSensorMask = 220;
-                } else if (tempSensor && ambientSensor && !humiditySensor) {
-                    selectedSensorMask = 219;
-                } else if (humiditySensor && ambientSensor && !tempSensor) {
-                    selectedSensorMask = 221;
-                } else if (tempSensor && humiditySensor && !ambientSensor) {
-                    selectedSensorMask = 222;
-                } else if (tempSensor && humiditySensor && ambientSensor) {
-                    selectedSensorMask = 223;
-                } else {
-                    selectedSensorMask = null;
-                }
-               
-                // Update the selected row in the table
-                const rows = document.querySelectorAll('#sensorCommandTable tbody tr');
-                rows.forEach(r => r.classList.remove('selected'));
-               
-                if (selectedSensorMask !== null) {
-                    // Find and select the corresponding row
-                    const rowIndex = [0, 217, 218, 220, 219, 221, 222, 223].indexOf(selectedSensorMask);
-                    if (rowIndex !== -1) {
-                        rows[rowIndex].classList.add('selected');
-                    }
-                }
-               
-                updateCommand();
-            }
-        }
-
-        function handleNoneSensor() {
-            const noneSensor = document.getElementById('noneSensor');
-            if (noneSensor.checked) {
-                document.getElementById('tempSensor').checked = false;
-                document.getElementById('humiditySensor').checked = false;
-                document.getElementById('lightSensor').checked = false;
-            }
-            updateSensorCommandForBSF();
             updateCommand();
         }
 
@@ -997,17 +857,14 @@
             const bleScanTime = document.getElementById('bleScanTime');
             const warning = document.getElementById('bleScanTimeWarning');
            
-            // Validate min and max values
             if (bleScanTime.value < 10) {
                 bleScanTime.value = 10;
             } else if (bleScanTime.value > 100) {
                 bleScanTime.value = 100;
             }
            
-            // Round to nearest multiple of 10
             bleScanTime.value = Math.round(bleScanTime.value / 10) * 10;
            
-            // Show warning if scan time is more than 30 seconds
             if (bleScanTime.value > 30) {
                 warning.classList.remove('hidden');
             } else {
@@ -1019,12 +876,10 @@
             const shockTimeGap = document.getElementById('shockTimeGap');
             const warning = document.getElementById('shockTimeGapWarning');
            
-            // Validate min value
             if (shockTimeGap.value < 360) {
                 shockTimeGap.value = 360;
             }
            
-            // Show warning if time gap is less than 900 seconds
             if (shockTimeGap.value < 900) {
                 warning.classList.remove('hidden');
             } else {
@@ -1036,12 +891,10 @@
             const lightTimeGap = document.getElementById('lightTimeGap');
             const warning = document.getElementById('lightTimeGapWarning');
            
-            // Validate min value
             if (lightTimeGap.value < 360) {
                 lightTimeGap.value = 360;
             }
            
-            // Show warning if time gap is less than 900 seconds
             if (lightTimeGap.value < 900) {
                 warning.classList.remove('hidden');
             } else {
@@ -1054,7 +907,6 @@
             const bleScanTimeInput = document.getElementById('bleScanTimeInput');
             bleScanTimeInput.style.display = bleConfig === 'on' ? 'block' : 'none';
            
-            // Validate BLE scan time when showing the input
             if (bleConfig === 'on') {
                 validateBLEScanTime();
             }
@@ -1065,7 +917,6 @@
             const shockInputs = document.getElementById('shockInputs');
             shockInputs.style.display = shockConfig === 'on' ? 'block' : 'none';
            
-            // Validate shock time gap when showing the input
             if (shockConfig === 'on') {
                 validateShockTimeGap();
                 updateThresholdTable();
@@ -1077,12 +928,10 @@
             const lightInputs = document.getElementById('lightInputs');
             lightInputs.style.display = lightConfig === 'on' ? 'block' : 'none';
            
-            // Validate light time gap when showing the input
             if (lightConfig === 'on') {
                 validateLightTimeGap();
             }
            
-            // Show/hide BSF light note
             const deviceType = document.getElementById('deviceType').value;
             const bsfLightNote = document.getElementById('bsfLightNote');
             if (deviceType === 'BSF/BSM' && lightConfig === 'on') {
@@ -1107,24 +956,214 @@
             document.getElementById('routerGPSInputs').style.display = routerGPSConfig === 'config' ? 'block' : 'none';
         }
 
-        function validateDeviceInput(input, isPRF = true) {
+        // Handle Enter key
+        function handleEnterKey(event, type) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                if (type === 'prfOnly') {
+                    validatePRFOnlyOnBlur();
+                } else {
+                    validatePRFAndSampleOnBlur();
+                }
+            }
+        }
+
+        // New PRF functions with improved editing experience
+        function togglePRFOptions() {
+            const prfOption = document.getElementById('prfOption').value;
+            const prfOnlyInput = document.getElementById('prfOnlyInput');
+            const prfAndSensorInput = document.getElementById('prfAndSensorInput');
             const deviceType = document.getElementById('deviceType').value;
-            let minValue;
-           
-            if (deviceType === 'BeeLabel') {
-                minValue = 600;
-            } else if (deviceType === 'BAG 5G') {
-                minValue = 900;
-            } else if (deviceType === 'BSF/BSM') {
-                minValue = 300;
-            } else {
-                return; // No validation for other devices
+            
+            // Hide both initially
+            prfOnlyInput.classList.add('hidden');
+            prfAndSensorInput.classList.add('hidden');
+            
+            // Reset validation error flag
+            prfValidationError = false;
+            
+            // Show selected option
+            if (prfOption === 'prfOnly') {
+                prfOnlyInput.classList.remove('hidden');
+            } else if (prfOption === 'prfAndSensor') {
+                prfAndSensorInput.classList.remove('hidden');
             }
-           
-            if (parseInt(input.value) < minValue) {
-                input.value = minValue;
-            }
+            
+            updatePRFNote();
             updateCommand();
+        }
+        
+        function getMinPRFValue() {
+            const deviceType = document.getElementById('deviceType').value;
+            if (deviceType === 'BSF/BSM') return 300;
+            if (deviceType === 'BeeLabel') return 600;
+            if (deviceType === 'BAG 5G') return 900;
+            return 300;
+        }
+        
+        function clearPRFOnlyError() {
+            document.getElementById('prfOnlyValue').classList.remove('input-error');
+            document.getElementById('prfMinWarning').classList.add('hidden');
+            prfValidationError = false;
+        }
+        
+        function clearPRFAndSampleError() {
+            document.getElementById('prfInterval').classList.remove('input-error');
+            document.getElementById('sampleFrequency').classList.remove('input-error');
+            document.getElementById('prfSampleWarning').classList.add('hidden');
+            document.getElementById('dataStorageWarning').classList.add('hidden');
+            prfValidationError = false;
+        }
+        
+        function validatePRFOnlyOnBlur() {
+            const input = document.getElementById('prfOnlyValue');
+            const minValue = getMinPRFValue();
+            const warning = document.getElementById('prfMinWarning');
+            let value = input.value.trim();
+            
+            // If empty, set to minimum
+            if (value === '') {
+                input.value = minValue;
+                input.classList.remove('input-error');
+                warning.classList.add('hidden');
+                prfValidationError = false;
+                updateCommand();
+                return true;
+            }
+            
+            // Parse as integer
+            const numValue = parseInt(value);
+            
+            // Check if it's a valid number
+            if (isNaN(numValue) || numValue < minValue) {
+                input.value = minValue;
+                warning.textContent = `Minimum allowed PRF is ${minValue} seconds. Value set to ${minValue}.`;
+                warning.classList.remove('hidden');
+                input.classList.add('input-error');
+                setTimeout(() => input.classList.remove('input-error'), 2000);
+                prfValidationError = false;
+                updateCommand();
+                return false;
+            }
+            
+            input.value = numValue;
+            input.classList.remove('input-error');
+            warning.classList.add('hidden');
+            prfValidationError = false;
+            updateCommand();
+            return true;
+        }
+        
+        function validatePRFAndSampleOnBlur() {
+            const prfInput = document.getElementById('prfInterval');
+            const sampleInput = document.getElementById('sampleFrequency');
+            const minValue = getMinPRFValue();
+            const warning = document.getElementById('prfSampleWarning');
+            const dataWarning = document.getElementById('dataStorageWarning');
+            
+            let prfValue = prfInput.value.trim();
+            let sampleValue = sampleInput.value.trim();
+            
+            // Handle empty values
+            if (prfValue === '') {
+                prfInput.value = minValue;
+                prfValue = minValue.toString();
+            }
+            if (sampleValue === '') {
+                sampleInput.value = minValue;
+                sampleValue = minValue.toString();
+            }
+            
+            // Parse as integers
+            let prf = parseInt(prfValue);
+            let sample = parseInt(sampleValue);
+            
+            // Check for valid numbers and minimum values
+            let hasError = false;
+            
+            if (isNaN(prf) || prf < minValue) {
+                prf = minValue;
+                prfInput.value = minValue;
+                hasError = true;
+            }
+            
+            if (isNaN(sample) || sample < minValue) {
+                sample = minValue;
+                sampleInput.value = minValue;
+                hasError = true;
+            }
+            
+            // Reset warnings
+            warning.classList.add('hidden');
+            dataWarning.classList.add('hidden');
+            prfInput.classList.remove('input-error');
+            sampleInput.classList.remove('input-error');
+            
+            if (hasError) {
+                warning.textContent = `Minimum allowed value is ${minValue} seconds.`;
+                warning.classList.remove('hidden');
+                prfInput.classList.add('input-error');
+                sampleInput.classList.add('input-error');
+                setTimeout(() => {
+                    prfInput.classList.remove('input-error');
+                    sampleInput.classList.remove('input-error');
+                }, 2000);
+                prfValidationError = false;
+                updateCommand();
+                return false;
+            }
+            
+            // Check if sample can't be greater than prf
+            if (sample > prf) {
+                warning.textContent = 'Sensor/Sample Frequency cannot be greater than PRF/Reporting Interval';
+                warning.classList.remove('hidden');
+                sampleInput.classList.add('input-error');
+                setTimeout(() => sampleInput.classList.remove('input-error'), 2000);
+                prfValidationError = true;
+                updateCommand();
+                return false;
+            }
+            
+            // Check if prf should be multiple of sample
+            if (prf % sample !== 0) {
+                warning.textContent = 'PRF/Reporting Interval must be a multiple of Sensor/Sample Frequency';
+                warning.classList.remove('hidden');
+                prfInput.classList.add('input-error');
+                sampleInput.classList.add('input-error');
+                setTimeout(() => {
+                    prfInput.classList.remove('input-error');
+                    sampleInput.classList.remove('input-error');
+                }, 2000);
+                prfValidationError = true;
+                updateCommand();
+                return false;
+            }
+            
+            // Check if PRF/Sample > 30
+            if (prf / sample > 30) {
+                dataWarning.textContent = 'Warning: This configuration (PRF/Sample > 30) may cause data storage issues due to too many sample data.';
+                dataWarning.classList.remove('hidden');
+            }
+            
+            prfValidationError = false;
+            updateCommand();
+            return true;
+        }
+        
+        function updatePRFNote() {
+            const deviceType = document.getElementById('deviceType').value;
+            const prfNote = document.getElementById('prfNote');
+            
+            let noteText = '';
+            if (deviceType === 'BSF/BSM') {
+                noteText = 'Note: Lowest allowed PRF for BSF/BSM is 300 seconds';
+            } else if (deviceType === 'BeeLabel') {
+                noteText = 'Note: Lowest allowed PRF for BeeLabel is 600 seconds';
+            } else if (deviceType === 'BAG 5G') {
+                noteText = 'Note: Lowest allowed PRF for BAG 5G is 900 seconds';
+            }
+            
+            prfNote.textContent = noteText;
         }
 
         function handleDeviceTypeChange() {
@@ -1136,12 +1175,11 @@
             configTypeSelect.innerHTML = '<option value="None">-- Select Configuration --</option>';
             selectedConfigs.clear();
             selectedSensorMask = null;
+            prfValidationError = false;
 
             if (deviceType !== 'None') {
-                // Show configuration selector
                 configSelector.classList.remove('hidden');
                
-                // Populate configuration options based on device type
                 const configs = deviceConfigs[deviceType];
                 configs.forEach(config => {
                     const option = document.createElement('option');
@@ -1150,27 +1188,13 @@
                     configTypeSelect.appendChild(option);
                 });
 
-                // Set default values based on device type
-                if (deviceType === 'BeeLabel') {
-                    document.getElementById('prfInterval').min = 600;
-                    document.getElementById('sampleFrequency').min = 600;
-                    document.getElementById('prfInterval').value = 600;
-                    document.getElementById('sampleFrequency').value = 600;
-                    // Show all sensor options for BeeLabel
-                    document.getElementById('humiditySensorItem').style.display = 'block';
-                } else if (deviceType === 'BAG 5G') {
-                    document.getElementById('prfInterval').min = 900;
-                    document.getElementById('sampleFrequency').min = 900;
-                    document.getElementById('prfInterval').value = 900;
-                    document.getElementById('sampleFrequency').value = 900;
-                    document.getElementById('humiditySensorItem').style.display = 'block';
-                } else if (deviceType === 'BSF/BSM') {
-                    document.getElementById('prfInterval').min = 300;
-                    document.getElementById('sampleFrequency').min = 300;
-                    document.getElementById('prfInterval').value = 300;
-                    document.getElementById('sampleFrequency').value = 300;
-                    document.getElementById('humiditySensorItem').style.display = 'block';
-                }
+                // Set default PRF values based on device type
+                const minPRF = getMinPRFValue();
+                document.getElementById('prfOnlyValue').value = minPRF;
+                document.getElementById('prfInterval').value = minPRF;
+                document.getElementById('sampleFrequency').value = minPRF;
+                
+                updatePRFNote();
 
                 if (deviceType === 'Solar') {
                     document.getElementById('motionTimer').min = 600;
@@ -1179,7 +1203,6 @@
                     document.getElementById('standstillTimer').value = 1200;
                 }
             } else {
-                // Hide configuration selector if no device is selected
                 configSelector.classList.add('hidden');
             }
 
@@ -1200,25 +1223,12 @@
                 document.getElementById('routerConfig').classList.add('hidden');
             }
 
-            // Show/hide BSF sensor notes and command table
-            const bsfSensorNotes = document.getElementById('bsfSensorNotes');
-            const bsfSensorCommandTable = document.getElementById('bsfSensorCommandTable');
-            const sensorCheckboxes = document.getElementById('sensorCheckboxes');
-           
-            if (deviceType === 'BSF/BSM') {
-                bsfSensorNotes.classList.add('hidden'); // Hide old notes
-                bsfSensorCommandTable.classList.remove('hidden'); // Show new table
-                sensorCheckboxes.classList.add('hidden'); // Hide checkboxes for BSF/BSM
+            // Show sensor command table for BSF/BSM, BeeLabel, BAG 5G
+            const deviceSensorCommandTable = document.getElementById('deviceSensorCommandTable');
+            if (['BSF/BSM', 'BeeLabel', 'BAG 5G'].includes(deviceType)) {
+                deviceSensorCommandTable.classList.remove('hidden');
             } else {
-                bsfSensorNotes.classList.add('hidden');
-                bsfSensorCommandTable.classList.add('hidden');
-                sensorCheckboxes.classList.remove('hidden');
-                // Show sensor options for other devices
-                if (deviceType === 'BeeLabel' || deviceType === 'BAG 5G') {
-                    document.getElementById('humiditySensorItem').style.display = 'block';
-                } else {
-                    document.getElementById('humiditySensorItem').style.display = 'none';
-                }
+                deviceSensorCommandTable.classList.add('hidden');
             }
 
             // Hide light note initially
@@ -1228,7 +1238,15 @@
             const rows = document.querySelectorAll('#sensorCommandTable tbody tr');
             rows.forEach(r => r.classList.remove('selected'));
 
-            // Refresh the command page
+            // Reset PRF option
+            document.getElementById('prfOption').value = 'none';
+            document.getElementById('prfOnlyInput').classList.add('hidden');
+            document.getElementById('prfAndSensorInput').classList.add('hidden');
+            
+            // Clear any error states
+            clearPRFOnlyError();
+            clearPRFAndSampleError();
+
             refreshCommandPage();
             updateCommand();
         }
@@ -1244,7 +1262,6 @@
 
             // Show the selected configuration section
             if (configType !== 'None') {
-                // Special handling for PRF Configuration based on device type
                 if (configType === "PRF Configuration") {
                     if (deviceType === 'Solar') {
                         document.getElementById('solarPRFSection').classList.remove('hidden');
@@ -1252,23 +1269,20 @@
                         document.getElementById('routerPRFSection').classList.remove('hidden');
                     } else {
                         document.getElementById('prfConfigSection').classList.remove('hidden');
-                        // Update min values when showing PRF config
-                        if (deviceType === 'BeeLabel') {
-                            document.getElementById('prfInterval').min = 600;
-                            document.getElementById('sampleFrequency').min = 600;
-                        } else if (deviceType === 'BAG 5G') {
-                            document.getElementById('prfInterval').min = 900;
-                            document.getElementById('sampleFrequency').min = 900;
-                        } else if (deviceType === 'BSF/BSM') {
-                            document.getElementById('prfInterval').min = 300
-                            document.getElementById('sampleFrequency').min = 300;
+                        
+                        // Show/hide PRF option selector for BSF/BSM, BeeLabel, BAG 5G
+                        const prfOptionSelector = document.getElementById('prfOptionSelector');
+                        if (['BSF/BSM', 'BeeLabel', 'BAG 5G'].includes(deviceType)) {
+                            prfOptionSelector.classList.remove('hidden');
+                            updatePRFNote();
+                        } else {
+                            prfOptionSelector.classList.add('hidden');
                         }
                     }
                 }
-                // Special handling for GPS Configuration for Router
                 else if (configType === "GPS Configuration" && deviceType === 'Router') {
                     document.getElementById('routerGPSSection').classList.remove('hidden');
-                    toggleRouterGPSInputs(); // Show/hide inputs based on selection
+                    toggleRouterGPSInputs();
                 }
                 else if (configSectionMap[configType]) {
                     document.getElementById(configSectionMap[configType]).classList.remove('hidden');
@@ -1297,28 +1311,21 @@
             document.getElementById('bleConfig').value = 'none';
             document.getElementById('shockConfig').value = 'none';
             document.getElementById('lightConfig').value = 'none';
-            document.getElementById('lightSensor').checked = false;
-            document.getElementById('tempSensor').checked = false;
-            document.getElementById('humiditySensor').checked = false;
-            document.getElementById('noneSensor').checked = false;
             document.getElementById('deactivationConfig').checked = false;
             document.getElementById('solarBLEConfig').value = 'none';
             document.getElementById('solarBLEScanModeConfig').value = 'none';
             document.getElementById('solarPRFConfig').value = 'none';
             document.getElementById('routerGPSConfig').value = 'none';
+            document.getElementById('prfOption').value = 'none';
            
             // Reset PRF values based on device type
             const deviceType = document.getElementById('deviceType').value;
-            if (deviceType === 'BeeLabel') {
-                document.getElementById('prfInterval').value = 600;
-                document.getElementById('sampleFrequency').value = 600;
-            } else if (deviceType === 'BAG 5G') {
-                document.getElementById('prfInterval').value = 900;
-                document.getElementById('sampleFrequency').value = 900;
-            } else if (deviceType === 'BSF/BSM') {
-                document.getElementById('prfInterval').value = 300;
-                document.getElementById('sampleFrequency').value = 300;
-            } else if (deviceType === 'Router') {
+            const minPRF = getMinPRFValue();
+            document.getElementById('prfOnlyValue').value = minPRF;
+            document.getElementById('prfInterval').value = minPRF;
+            document.getElementById('sampleFrequency').value = minPRF;
+            
+            if (deviceType === 'Router') {
                 document.getElementById('routerPRF').value = 300;
             }
            
@@ -1332,9 +1339,19 @@
             document.getElementById('lightInputs').style.display = 'none';
             document.getElementById('routerGPSInputs').style.display = 'none';
             document.getElementById('solarBLEScanModeInputs').style.display = 'none';
+            document.getElementById('prfOnlyInput').classList.add('hidden');
+            document.getElementById('prfAndSensorInput').classList.add('hidden');
             document.getElementById('bleScanTimeWarning').classList.add('hidden');
             document.getElementById('shockTimeGapWarning').classList.add('hidden');
             document.getElementById('lightTimeGapWarning').classList.add('hidden');
+            document.getElementById('prfMinWarning').classList.add('hidden');
+            document.getElementById('prfSampleWarning').classList.add('hidden');
+            document.getElementById('dataStorageWarning').classList.add('hidden');
+            
+            // Clear error states
+            clearPRFOnlyError();
+            clearPRFAndSampleError();
+            prfValidationError = false;
 
             // Hide firmware notes
             document.getElementById('bsfFWNote').classList.add('hidden');
@@ -1351,74 +1368,16 @@
             currentCommand = "";
         }
 
-        function validateIntervals() {
-            const deviceType = document.getElementById('deviceType').value;
-            const configType = document.getElementById('configType').value;
-           
-            // Only validate for specific devices and when PRF Configuration is selected
-            if (['BSF/BSM', 'BeeLabel', 'BAG 5G'].includes(deviceType) && configType === "PRF Configuration") {
-                const prfInterval = parseInt(document.getElementById('prfInterval').value);
-                const sampleFrequency = parseInt(document.getElementById('sampleFrequency').value);
-
-                // Check if Sample Frequency is greater than PRF Interval
-                if (sampleFrequency > prfInterval) {
-                    return false;
-                }
-
-                // Check if PRF Interval is a multiple of Sample Frequency
-                if (prfInterval % sampleFrequency !== 0) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
         function updateCommand() {
             const deviceType = document.getElementById('deviceType').value;
             const configType = document.getElementById('configType').value;
 
-            // If no device or configuration is selected, show appropriate message
             if (deviceType === 'None' || configType === 'None') {
                 if (deviceType === 'None') {
                     document.getElementById('output').innerHTML = '<em>Please select a device type.</em>';
                 } else {
                     document.getElementById('output').innerHTML = '<em>Please select configuration options.</em>';
                 }
-                currentCommand = "";
-                return;
-            }
-
-            // Validate PRF and sample frequency values for specific devices
-            if (['BSF/BSM', 'BeeLabel', 'BAG 5G'].includes(deviceType) && configType === "PRF Configuration") {
-                const prfInterval = document.getElementById('prfInterval');
-                const sampleFrequency = document.getElementById('sampleFrequency');
-               
-                // Get minimum values based on device type
-                let minPRF, minSample;
-                if (deviceType === 'BeeLabel') {
-                    minPRF = 600;
-                    minSample = 600;
-                } else if (deviceType === 'BAG 5G') {
-                    minPRF = 900;
-                    minSample = 900;
-                } else if (deviceType === 'BSF/BSM') {
-                    minPRF = 300;
-                    minSample = 300;
-                }
-
-                // Validate and enforce minimum values
-                if (parseInt(prfInterval.value) < minPRF) {
-                    prfInterval.value = minPRF;
-                }
-                if (parseInt(sampleFrequency.value) < minSample) {
-                    sampleFrequency.value = minSample;
-                }
-            }
-
-            // Validate intervals only for specific devices and PRF configuration
-            if (!validateIntervals()) {
-                document.getElementById('output').innerHTML = '<em>Configuration error: PRF/Reporting Interval must be a multiple or equal to Sensor/Sample Frequency.</em>';
                 currentCommand = "";
                 return;
             }
@@ -1554,47 +1513,58 @@
                         const lightTimeGap = document.getElementById('lightTimeGap').value;
                         currentCommand = `AT+LIGHT=1,172,${lightTimeGap}`;
                     } else if (lightConfig === "off") {
-                        currentCommand = `AT+LIGHT=0,172,360`;
+                        // Updated command for BSF/BSM light off
+                        if (deviceType === 'BSF/BSM') {
+                            currentCommand = `AT+LIGHT=0,516,300`;
+                        } else {
+                            currentCommand = `AT+LIGHT=0,172,360`;
+                        }
                     } else {
                         currentCommand = "";
                     }
                 }
                 else if (configType === "Sensor Configuration") {
-                    // Special handling for BSF/BSM - use the table selection
-                    if (deviceType === 'BSF/BSM') {
+                    // For BSF/BSM, BeeLabel, BAG 5G - use the table selection
+                    if (['BSF/BSM', 'BeeLabel', 'BAG 5G'].includes(deviceType)) {
                         if (selectedSensorMask !== null) {
                             currentCommand = `AT+SENSORMASK=${selectedSensorMask}`;
-                        } else {
-                            currentCommand = "";
-                        }
-                    } else {
-                        // Original logic for other devices
-                        const tempSensor = document.getElementById('tempSensor').checked;
-                        const ambientSensor = document.getElementById('lightSensor').checked;
-                        const humiditySensor = document.getElementById('humiditySensor').checked;
-                        const noneSensor = document.getElementById('noneSensor').checked;
-
-                        // If "None" is selected, set sensor mask to 0
-                        if (noneSensor) {
-                            currentCommand = `AT+SENSORMASK=0`;
-                        }
-                        // Generate AT+SENSORMASK only if at least one sensor is selected
-                        else if (tempSensor || ambientSensor || humiditySensor) {
-                            const sensorMask = generateSensorMask(tempSensor, humiditySensor, ambientSensor);
-                            currentCommand = `AT+SENSORMASK=${sensorMask}`;
                         } else {
                             currentCommand = "";
                         }
                     }
                 }
                 else if (configType === "PRF Configuration") {
-                    const prfInterval = document.getElementById('prfInterval').value;
-                    const sampleFrequency = document.getElementById('sampleFrequency').value;
-                   
-                    if (prfInterval === sampleFrequency) {
-                        currentCommand = `AT+TIMEGAP=0,${prfInterval},1,${prfInterval} & AT+SAMPLEMODE=0,0`;
+                    const prfOption = document.getElementById('prfOption').value;
+                    
+                    // Don't generate command if there's a validation error
+                    if (prfValidationError) {
+                        currentCommand = "";
+                        document.getElementById('output').innerHTML = '<em>Please fix validation errors before generating command.</em>';
+                        return;
+                    }
+                    
+                    if (prfOption === 'prfOnly') {
+                        const prfOnlyValue = document.getElementById('prfOnlyValue').value;
+                        if (prfOnlyValue && !isNaN(parseInt(prfOnlyValue))) {
+                            currentCommand = `AT+TIMEGAP=0,${prfOnlyValue},1,${prfOnlyValue} & AT+SAMPLEMODE=0,0`;
+                        } else {
+                            currentCommand = "";
+                        }
+                    } else if (prfOption === 'prfAndSensor') {
+                        const prfInterval = document.getElementById('prfInterval').value;
+                        const sampleFrequency = document.getElementById('sampleFrequency').value;
+                        
+                        if (prfInterval && sampleFrequency && !isNaN(parseInt(prfInterval)) && !isNaN(parseInt(sampleFrequency))) {
+                            if (prfInterval === sampleFrequency) {
+                                currentCommand = `AT+TIMEGAP=0,${prfInterval},1,${prfInterval} & AT+SAMPLEMODE=0,0`;
+                            } else {
+                                currentCommand = `AT+TIMEGAP=0,${prfInterval},1,${sampleFrequency} & AT+SAMPLEMODE=1,1`;
+                            }
+                        } else {
+                            currentCommand = "";
+                        }
                     } else {
-                        currentCommand = `AT+TIMEGAP=0,${prfInterval},1,${sampleFrequency} & AT+SAMPLEMODE=1,1`;
+                        currentCommand = "";
                     }
                 }
                 else if (configType === "Deactivation Configuration") {
@@ -1610,25 +1580,20 @@
             // Display the generated command
             const outputDiv = document.getElementById('output');
             if (currentCommand === "") {
-                if (deviceType === 'BSF/BSM' && configType === "Sensor Configuration") {
+                if (['BSF/BSM', 'BeeLabel', 'BAG 5G'].includes(deviceType) && configType === "Sensor Configuration") {
                     outputDiv.innerHTML = "<em>Please select a sensor configuration from the table above.</em>";
+                } else if (['BSF/BSM', 'BeeLabel', 'BAG 5G'].includes(deviceType) && configType === "PRF Configuration") {
+                    if (prfValidationError) {
+                        outputDiv.innerHTML = "<em>Please fix validation errors before generating command.</em>";
+                    } else {
+                        outputDiv.innerHTML = "<em>Please select a PRF configuration option.</em>";
+                    }
                 } else {
                     outputDiv.innerHTML = "<em>No command generated. Please select configuration options.</em>";
                 }
             } else {
                 outputDiv.innerHTML = `<pre class="command-output">${currentCommand}</pre>`;
             }
-        }
-
-        function generateSensorMask(tempSensor, humiditySensor, ambientSensor) {
-            const bit0 = ambientSensor ? 1 : 0;
-            const bit1 = tempSensor ? 1 : 0;
-            const bit2 = humiditySensor ? 1 : 0;
-            const bit3 = 1; // Always 1
-            const bit4 = 1; // Always 1
-
-            const binary = `${bit4}${bit3}${bit2}${bit1}${bit0}`;
-            return parseInt(binary, 2);
         }
 
         // Initialize the page
